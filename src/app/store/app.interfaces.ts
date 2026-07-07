@@ -103,6 +103,13 @@ export function isBirdOrHummingbirdCard(object: any): object is BirdCard {
     return isBirdCard(object) || isHummingbirdCard(object)
 }
 
+export function calculateBirdCardValue(card: BirdCard): number {
+    const victoryPoints = Number(card['Victory points']) || 0
+    const foodCost = Number(card['Total food cost']) || 0
+
+    return victoryPoints - foodCost - 2
+}
+
 export enum Color {
     Brown = 'brown',
     Pink = 'pink',

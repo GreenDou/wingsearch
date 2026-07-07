@@ -6,6 +6,7 @@
     background-position-x: 85%;
     background-repeat: no-repeat;
     container-type: inline-size;
+    position: relative;
 }
 
 .content {
@@ -101,4 +102,26 @@
         margin-left: 8.5cqw;
         max-height: 18.5cqw;
     }
+}
+
+.card-value {
+    background-color: rgba(245, 246, 241, 0.82);
+    border: 0.2cqw solid #74685e;
+    border-radius: 2cqw;
+    bottom: 7cqw;
+    color: #4a4139;
+    display: flex;
+    flex-direction: column;
+    font-family: CardenioModernBold, SiliciStrong, sans-serif;
+    min-width: 12cqw;
+    padding: 0.7cqw 1.2cqw;
+    position: absolute;
+    right: 7cqw;
+    text-align: center;
+}
+
+.card-value-label {
+    color: #666666;
+    font-size: 0.75em;
+    text-transform: uppercase;
 }

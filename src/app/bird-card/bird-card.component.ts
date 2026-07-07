@@ -2,7 +2,7 @@ import { Component, OnInit, Input } from '@angular/core'
 import { Observable } from 'rxjs'
 import { map } from 'rxjs/operators';
 import { Store } from '@ngrx/store'
-import { BirdCard, AppState, ExpansionType, PackType } from '../store/app.interfaces'
+import { BirdCard, AppState, ExpansionType, PackType, calculateBirdCardValue } from '../store/app.interfaces'
 import { TranslatePipe } from '../translate.pipe'
 import EasterEggAssets from '../../assets/data/extra-assets.json'
 
@@ -61,6 +61,10 @@ export class BirdCardComponent implements OnInit {
     return (this.card['* (food cost)'] ? '*' : '') + Object.entries(food)
       .reduce((acc, val) => ([...acc, ...Array.from({ length: val[1] }, () => `[${val[0]}]`)]), [])
       .join(this.card['/ (food cost)'] ? '/' : '+') || '[no-food]'
+  }
+
+  get cardValue(): number {
+    return calculateBirdCardValue(this.card)
   }
 
   resolveNestType() {

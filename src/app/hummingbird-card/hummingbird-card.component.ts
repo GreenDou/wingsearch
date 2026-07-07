@@ -2,7 +2,7 @@ import { Component, OnInit, Input } from '@angular/core'
 import { Observable } from 'rxjs'
 import { map } from 'rxjs/operators';
 import { Store } from '@ngrx/store'
-import { BirdCard, AppState, GroupType, BenefitType } from '../store/app.interfaces'
+import { BirdCard, AppState, GroupType, BenefitType, calculateBirdCardValue } from '../store/app.interfaces'
 import { TranslatePipe } from '../translate.pipe'
 import EasterEggAssets from '../../assets/data/extra-assets.json'
 
@@ -80,5 +80,9 @@ export class HummingbirdCardComponent implements OnInit {
 
   getBenefitIcon() {
     return this.card.Benefit === BenefitType.Row ? 'row_benefit' : this.card.Benefit
+  }
+
+  get cardValue(): number {
+    return calculateBirdCardValue(this.card)
   }
 }
