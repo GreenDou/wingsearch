@@ -33,6 +33,7 @@ export class SearchComponent implements OnInit {
     { value: 'pt', display: 'Português' },
     { value: 'tr', display: 'Türkçe' },
     { value: 'uk', display: 'українська' },
+    { value: 'zh', display: '简体中文' },
   ]
 
   readonly supportedExpansions = [
