@@ -11,7 +11,7 @@ import { MatDialog } from '@angular/material/dialog'
 import { LanguageDialogComponent } from './language-dialog/language-dialog.component'
 import { AssetPackDialogComponent } from './asset-pack-dialog/asset-pack-dialog.component'
 import { AnalyticsService } from '../analytics.service'
-import { access } from 'fs'
+import { preferredLanguage, supportedLanguages } from '../languages'
 
 @Component({
   selector: 'app-search',
@@ -20,21 +20,7 @@ import { access } from 'fs'
 })
 export class SearchComponent implements OnInit {
 
-  readonly supportedLanguages = [
-    { value: 'de', display: 'Deutsch' },
-    { value: 'dk', display: 'dansk' },
-    { value: 'en', display: 'English' },
-    { value: 'es', display: 'Español' },
-    { value: 'fr', display: 'Français' },
-    { value: 'jp', display: '日本語' },
-    { value: 'lt', display: 'lietuvių' },
-    { value: 'nl', display: 'Nederlands' },
-    { value: 'pl', display: 'Polski' },
-    { value: 'pt', display: 'Português' },
-    { value: 'tr', display: 'Türkçe' },
-    { value: 'uk', display: 'українська' },
-    { value: 'zh', display: '简体中文' },
-  ]
+  readonly supportedLanguages = supportedLanguages
 
   readonly supportedExpansions = [
     { value: 'core', display: 'Base game' },
@@ -228,6 +214,8 @@ export class SearchComponent implements OnInit {
   ) {
     this.filteredBonusCards = this.store.select(({ app }) => app.activeBonusCards)
     this.bonusCards = this.store.select(({ app }) => app.bonusCards)
+    this.language = preferredLanguage(cookies.hasConsent() ? cookies.getCookie('language') : '')
+    this.assetPack = cookies.getCookie('assetPack') || this.assetPack
     this.query = {
       ...this.query,
       expansion: {
@@ -254,9 +242,6 @@ export class SearchComponent implements OnInit {
   ngOnInit(): void {
     this.canFitStats = window.innerWidth >= 600
     this.bonusControl.valueChanges.subscribe(() => this.onBonusChange())
-    if (this.cookies.hasConsent())
-      this.language = this.cookies.getCookie('language') || this.language
-      this.assetPack = this.cookies.getCookie('assetPack') || this.assetPack
   }
 
   onQueryChange() {

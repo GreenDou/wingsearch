@@ -4,6 +4,7 @@ import { Actions, createEffect, ofType, ROOT_EFFECTS_INIT } from '@ngrx/effects'
 import { from, of } from 'rxjs'
 import { map, mergeMap } from 'rxjs/operators'
 import { CookiesService } from '../cookies.service'
+import { languageFromCode, preferredLanguage } from '../languages'
 import { changeLanguage } from './app.actions'
 
 @Injectable()
@@ -13,17 +14,19 @@ export class AppEffects {
     loadLanguage$ = createEffect(() => this.actions$.pipe(
         ofType(ROOT_EFFECTS_INIT, changeLanguage),
         mergeMap((action) => {
-            const language = action.language || (this.cookies.hasConsent() && this.cookies.getCookie('language'))
-            if (language)
+            const requestedLanguage = languageFromCode((action as any).language)
+            const savedLanguage = this.cookies.hasConsent() ? this.cookies.getCookie('language') : ''
+            const language = requestedLanguage || preferredLanguage(savedLanguage)
+            if (language && language !== 'en')
             {
-              const expansion = action.expansion || {
+              const expansion = (action as any).expansion || {
                   core: this.cookies.getCookie('expansion.core') !== '0',
                   european: this.cookies.getCookie('expansion.european') !== '0',
                   oceania: this.cookies.getCookie('expansion.oceania') !== '0',
                   asia: this.cookies.getCookie('expansion.asia') !== '0',
                   americas: this.cookies.getCookie('expansion.americas') !== '0',
               }
-              const promoPack = action.promoPack || {
+              const promoPack = (action as any).promoPack || {
                   promoAsia: this.cookies.getCookie('expansion.promoAsia') !== '0',
                   promoCA: this.cookies.getCookie('expansion.promoCA') !== '0',
                   promoEurope: this.cookies.getCookie('expansion.promoEurope') !== '0',

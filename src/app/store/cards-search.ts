@@ -1,27 +1,24 @@
 import FlexSearch from 'flexsearch'
 import { BirdCard, BonusCard } from './app.interfaces'
 
+const SEARCH_SPLIT = '\\s+'
+
+const searchField = (tokenize: 'full' | 'reverse', threshold: false | number, resolution?: number) => ({
+    encode: (value: string): string => removeDiacritics(value.toLowerCase()),
+    tokenize,
+    threshold,
+    split: SEARCH_SPLIT,
+    ...(resolution ? { resolution } : {})
+})
+
 export const birdCardsSearch = (cards: BirdCard[]) => {
     const search = FlexSearch.create({
         doc: {
             id: 'id',
             field: {
-                'Common name': {
-                    encode: (value: string): string => removeDiacritics(value.toLowerCase()),
-                    tokenize: 'full',
-                    threshold: false,
-                },
-                'Scientific name': {
-                    encode: (value: string): string => removeDiacritics(value.toLowerCase()),
-                    tokenize: 'full',
-                    threshold: false
-                },
-                'Power text': {
-                    encode: (value: string): string => removeDiacritics(value.toLowerCase()),
-                    tokenize: 'reverse',
-                    threshold: 3,
-                    resolution: 9
-                },
+                'Common name': searchField('full', false),
+                'Scientific name': searchField('full', false),
+                'Power text': searchField('full', 3, 9),
             }
         }
     })
@@ -35,23 +32,9 @@ export const bonusCardsSearch = (cards: BonusCard[]) => {
         doc: {
             id: 'id',
             field: {
-                'Bonus card': {
-                    encode: (value: string): string => removeDiacritics(value.toLowerCase()),
-                    tokenize: 'full',
-                    threshold: false,
-                },
-                Condition: {
-                    encode: (value: string): string => removeDiacritics(value.toLowerCase()),
-                    tokenize: 'reverse',
-                    threshold: 3,
-                    resolution: 9
-                },
-                VP: {
-                    encode: (value: string): string => removeDiacritics(value.toLowerCase()),
-                    tokenize: 'reverse',
-                    threshold: 3,
-                    resolution: 9
-                },
+                'Bonus card': searchField('full', false),
+                Condition: searchField('full', 3, 9),
+                VP: searchField('full', 3, 9),
             }
         }
     })
