@@ -50,6 +50,7 @@ h3 {
 
 .field-row,
 .bird-editor,
+.bonus-editor,
 .turn-grid {
     display: flex;
     flex-wrap: wrap;
@@ -77,8 +78,14 @@ h3 {
     flex: 1 1 auto;
 }
 
-.bird-field {
+.bird-field,
+.bonus-field {
     flex: 1 1 320px;
+}
+
+.bonus-chip-list {
+    display: block;
+    margin-top: 10px;
 }
 
 .habitat-field {
@@ -116,6 +123,45 @@ h3 {
     grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
 }
 
+.habitat-board {
+    display: grid;
+    gap: 10px;
+    margin-top: 12px;
+}
+
+.habitat-board-row {
+    align-items: stretch;
+    display: grid;
+    gap: 10px;
+    grid-template-columns: 118px minmax(0, 1fr);
+}
+
+.habitat-row-label {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.42);
+    border: 1px solid rgba(98, 67, 15, 0.14);
+    border-radius: 8px;
+    color: #555555;
+    display: flex;
+    font-weight: 600;
+    gap: 8px;
+    min-height: 54px;
+    padding: 8px 10px;
+}
+
+.habitat-row-label img {
+    height: 22px;
+    width: 22px;
+}
+
+.habitat-row-cards {
+    display: flex;
+    gap: 8px;
+    min-width: 0;
+    overflow-x: auto;
+    padding-bottom: 2px;
+}
+
 .entry-row {
     align-items: center;
     background: rgba(255, 255, 255, 0.52);
@@ -127,10 +173,65 @@ h3 {
     padding: 8px 8px 8px 12px;
 }
 
-.entry-row div {
+.board-entry {
+    flex: 0 0 272px;
+}
+
+.entry-copy {
     display: flex;
     flex-direction: column;
     min-width: 0;
+}
+
+.entry-side {
+    align-items: flex-end;
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    gap: 4px;
+    margin-left: 8px;
+}
+
+.entry-value {
+    align-items: flex-end;
+    cursor: help;
+    display: flex;
+    flex-direction: column;
+    line-height: 16px;
+    min-width: 76px;
+    text-align: right;
+}
+
+.entry-row .entry-value-total {
+    color: #62430f;
+    font-weight: 600;
+}
+
+.entry-value-detail {
+    white-space: nowrap;
+}
+
+.entry-actions {
+    align-items: center;
+    display: flex;
+}
+
+.entry-actions button {
+    height: 28px;
+    line-height: 28px;
+    width: 28px;
+}
+
+.entry-actions mat-icon {
+    font-size: 20px;
+    height: 20px;
+    line-height: 20px;
+    width: 20px;
+}
+
+.row-empty {
+    align-self: center;
+    margin: 0;
 }
 
 .entry-row strong {
@@ -205,18 +306,28 @@ h3 {
         display: none;
     }
 
-    .bird-editor {
+    .bird-editor,
+    .bonus-editor {
         align-items: stretch;
         flex-direction: column;
     }
 
     .habitat-field,
-    .bird-field {
+    .bird-field,
+    .bonus-field {
         flex-basis: auto;
         width: 100%;
     }
 
     .checkbox-field {
         min-height: auto;
+    }
+
+    .habitat-board-row {
+        grid-template-columns: 1fr;
+    }
+
+    .habitat-row-cards {
+        padding-bottom: 6px;
     }
 }

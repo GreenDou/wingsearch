@@ -74,6 +74,7 @@ export interface GameHelperPreference {
   planHabitat: string
   playedHabitat: string
   planInHand: boolean
+  selectedBonusCardIds: number[]
   plannedBirds: GameHelperBirdPreference[]
   playedBirds: GameHelperBirdPreference[]
   manualFoodTurns: number | null

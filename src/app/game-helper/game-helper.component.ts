@@ -4,10 +4,17 @@ import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete'
 import { Store } from '@ngrx/store'
 import { Subscription } from 'rxjs'
 import { GameHelperBirdPreference, GameHelperPreference, PreferencesStorageService } from '../preferences-storage.service'
-import { AppState, BirdCard } from '../store/app.interfaces'
+import { AppState, BirdCard, BonusCard } from '../store/app.interfaces'
+import {
+  BirdValueBreakdown,
+  calculateGameHelperBirdValue,
+  GameHelperScoredBird,
+  isGameHelperBonusCardSupported,
+} from './game-helper-bonus-value'
 
 type Habitat = 'forest' | 'grassland' | 'wetland'
 type TurnType = 'food' | 'eggs' | 'cards'
+type EntryListType = 'planned' | 'played'
 
 interface HabitatOption {
   value: Habitat
@@ -53,6 +60,7 @@ export class GameHelperComponent implements OnDestroy {
 
   planCardControl = new FormControl('')
   playedCardControl = new FormControl('')
+  bonusCardControl = new FormControl('')
 
   planHabitat: Habitat = 'forest'
   playedHabitat: Habitat = 'forest'
@@ -60,14 +68,18 @@ export class GameHelperComponent implements OnDestroy {
 
   plannedBirds: HelperBirdEntry[] = []
   playedBirds: HelperBirdEntry[] = []
+  selectedBonusCardIds: number[] = []
+  selectedBonusCards: BonusCard[] = []
 
   manualFoodTurns: number | null = null
   manualEggTurns: number | null = null
   manualCardTurns: number | null = null
 
   birdCards: BirdCard[] = []
+  bonusCards: BonusCard[] = []
   filteredPlanBirdCards: BirdCard[] = []
   filteredPlayedBirdCards: BirdCard[] = []
+  filteredBonusCards: BonusCard[] = []
 
   displayBird = (card: BirdCard | string): string => {
     if (!card) {
@@ -75,6 +87,14 @@ export class GameHelperComponent implements OnDestroy {
     }
 
     return typeof card === 'string' ? card : this.birdName(card)
+  }
+
+  displayBonus = (card: BonusCard | string): string => {
+    if (!card) {
+      return ''
+    }
+
+    return typeof card === 'string' ? card : this.bonusName(card)
   }
 
   private nextEntryId = 1
@@ -95,8 +115,19 @@ export class GameHelperComponent implements OnDestroy {
       })
     )
 
+    this.subscription.add(
+      this.store.select(({ app }) => app.bonusCards).subscribe(cards => {
+        this.bonusCards = [...cards]
+          .filter(card => this.isPlayerBonusCard(card))
+          .sort((a, b) => this.bonusName(a).localeCompare(this.bonusName(b)))
+        this.refreshSelectedBonusCards()
+        this.updateBonusOptions()
+      })
+    )
+
     this.subscription.add(this.planCardControl.valueChanges.subscribe(() => this.updatePlanOptions()))
     this.subscription.add(this.playedCardControl.valueChanges.subscribe(() => this.updatePlayedOptions()))
+    this.subscription.add(this.bonusCardControl.valueChanges.subscribe(() => this.updateBonusOptions()))
   }
 
   ngOnDestroy(): void {
@@ -145,6 +176,26 @@ export class GameHelperComponent implements OnDestroy {
 
   selectPlayedBird(event: MatAutocompleteSelectedEvent): void {
     this.playedCardControl.setValue(event.option.value as BirdCard)
+  }
+
+  selectBonusCard(event: MatAutocompleteSelectedEvent): void {
+    const card = event.option.value as BonusCard
+
+    if (!this.selectedBonusCardIds.includes(card.id)) {
+      this.selectedBonusCardIds = [...this.selectedBonusCardIds, card.id]
+      this.refreshSelectedBonusCards()
+      this.savePreferences()
+    }
+
+    this.bonusCardControl.setValue('')
+    this.updateBonusOptions()
+  }
+
+  removeBonusCard(id: number): void {
+    this.selectedBonusCardIds = this.selectedBonusCardIds.filter(cardId => cardId !== id)
+    this.refreshSelectedBonusCards()
+    this.updateBonusOptions()
+    this.savePreferences()
   }
 
   setManualTurns(type: TurnType, value: string | number): void {
@@ -302,6 +353,106 @@ export class GameHelperComponent implements OnDestroy {
     return entry.id
   }
 
+  trackBonusCard(index: number, card: BonusCard): number {
+    return card.id
+  }
+
+  entriesForHabitat(entries: HelperBirdEntry[], habitat: Habitat): HelperBirdEntry[] {
+    return entries.filter(entry => entry.habitat === habitat)
+  }
+
+  canMoveEntry(type: EntryListType, id: number, direction: number): boolean {
+    const entries = this.entriesByType(type)
+    const entry = entries.find(item => item.id === id)
+
+    if (!entry) {
+      return false
+    }
+
+    const rowEntries = this.entriesForHabitat(entries, entry.habitat)
+    const rowIndex = rowEntries.findIndex(item => item.id === id)
+    const nextIndex = rowIndex + direction
+
+    return nextIndex >= 0 && nextIndex < rowEntries.length
+  }
+
+  moveEntry(type: EntryListType, id: number, direction: number): void {
+    if (!this.canMoveEntry(type, id, direction)) {
+      return
+    }
+
+    const entries = this.entriesByType(type)
+    const entry = entries.find(item => item.id === id)
+
+    if (!entry) {
+      return
+    }
+
+    const rowEntries = this.entriesForHabitat(entries, entry.habitat)
+    const rowIndex = rowEntries.findIndex(item => item.id === id)
+    const swapEntry = rowEntries[rowIndex + direction]
+    const entryIndex = entries.findIndex(item => item.id === entry.id)
+    const swapIndex = entries.findIndex(item => item.id === swapEntry.id)
+    const updatedEntries = [...entries]
+
+    updatedEntries[entryIndex] = swapEntry
+    updatedEntries[swapIndex] = entry
+    this.setEntriesByType(type, updatedEntries)
+    this.savePreferences()
+  }
+
+  birdValue(entry: HelperBirdEntry): BirdValueBreakdown | null {
+    if (entry.cardId === null) {
+      return null
+    }
+
+    const card = this.findCard(entry.cardId)
+
+    if (!card) {
+      return null
+    }
+
+    return calculateGameHelperBirdValue(
+      card,
+      entry.id,
+      this.scoredBirds(),
+      this.selectedBonusCards,
+    )
+  }
+
+  birdValueTooltip(value: BirdValueBreakdown): string {
+    const countedBonuses = value.contributions
+      .filter(contribution => contribution.value !== 0)
+      .map(contribution => `${contribution.bonusCardName} ${this.formatSignedValue(contribution.value)}`)
+    const unsupportedBonuses = value.unsupportedBonusCards
+      .map(contribution => contribution.bonusCardName)
+    const details = [
+      `Base value: ${value.baseValue}`,
+      `Bonus value: ${this.formatSignedValue(value.bonusValue)}`,
+    ]
+
+    if (countedBonuses.length) {
+      details.push(`Bonus cards: ${countedBonuses.join(', ')}`)
+    }
+
+    if (unsupportedBonuses.length) {
+      details.push(`Not counted: ${unsupportedBonuses.join(', ')}`)
+    }
+
+    return details.join('\n')
+  }
+
+  formatSignedValue(value: number): string {
+    return value > 0 ? `+${value}` : `${value}`
+  }
+
+  unsupportedBonusCardsLabel(): string {
+    return this.selectedBonusCards
+      .filter(card => !isGameHelperBonusCardSupported(card.id))
+      .map(card => this.bonusName(card))
+      .join(', ')
+  }
+
   private createEntry(value: BirdCard | string, habitat: Habitat, inHand: boolean): HelperBirdEntry {
     const card = typeof value === 'string' ? this.findCardByName(value) : value
     const typedName = typeof value === 'string' ? value.trim() : ''
@@ -323,6 +474,10 @@ export class GameHelperComponent implements OnDestroy {
     this.filteredPlayedBirdCards = this.filterBirdCards(this.playedCardControl.value)
   }
 
+  private updateBonusOptions(): void {
+    this.filteredBonusCards = this.filterBonusCards(this.bonusCardControl.value)
+  }
+
   private filterBirdCards(value: BirdCard | string): BirdCard[] {
     const query = typeof value === 'string' ? value.toLowerCase().trim() : this.birdName(value).toLowerCase()
 
@@ -338,8 +493,27 @@ export class GameHelperComponent implements OnDestroy {
     }).slice(0, 25)
   }
 
+  private filterBonusCards(value: BonusCard | string): BonusCard[] {
+    const query = typeof value === 'string' ? value.toLowerCase().trim() : this.bonusName(value).toLowerCase()
+    const availableBonusCards = this.bonusCards.filter(card => !this.selectedBonusCardIds.includes(card.id))
+
+    if (!query) {
+      return availableBonusCards.slice(0, 25)
+    }
+
+    return availableBonusCards.filter(card => {
+      const bonusName = this.bonusName(card).toLowerCase()
+      const condition = (card.Condition || '').toLowerCase()
+      return bonusName.includes(query) || condition.includes(query)
+    }).slice(0, 25)
+  }
+
   private birdName(card: BirdCard): string {
     return card['Common name']
+  }
+
+  private bonusName(card: BonusCard): string {
+    return card['Bonus card']
   }
 
   private findCard(cardId: number): BirdCard | null {
@@ -398,6 +572,7 @@ export class GameHelperComponent implements OnDestroy {
     this.planHabitat = this.toHabitat(preferences.planHabitat)
     this.playedHabitat = this.toHabitat(preferences.playedHabitat)
     this.planInHand = preferences.planInHand
+    this.selectedBonusCardIds = this.restoreBonusCardIds(preferences.selectedBonusCardIds)
     this.plannedBirds = this.restoreEntries(preferences.plannedBirds)
     this.playedBirds = this.restoreEntries(preferences.playedBirds)
     this.manualFoodTurns = this.parseManualTurns(preferences.manualFoodTurns)
@@ -417,6 +592,7 @@ export class GameHelperComponent implements OnDestroy {
       planHabitat: this.planHabitat,
       playedHabitat: this.playedHabitat,
       planInHand: this.planInHand,
+      selectedBonusCardIds: this.selectedBonusCardIds,
       plannedBirds: this.plannedBirds,
       playedBirds: this.playedBirds,
       manualFoodTurns: this.manualFoodTurns,
@@ -437,6 +613,18 @@ export class GameHelperComponent implements OnDestroy {
       }))
   }
 
+  private restoreBonusCardIds(ids: number[]): number[] {
+    return (ids || []).reduce((acc, id) => {
+      const parsedId = this.parseWholeNumber(id)
+
+      if (parsedId !== null) {
+        acc.push(parsedId)
+      }
+
+      return acc
+    }, [] as number[])
+  }
+
   private refreshEntryNames(): void {
     this.plannedBirds = this.plannedBirds.map(entry => this.refreshEntryName(entry))
     this.playedBirds = this.playedBirds.map(entry => this.refreshEntryName(entry))
@@ -449,6 +637,56 @@ export class GameHelperComponent implements OnDestroy {
 
     const card = this.findCard(entry.cardId)
     return card ? { ...entry, name: this.birdName(card) } : entry
+  }
+
+  private refreshSelectedBonusCards(): void {
+    const selectedBonusCards: BonusCard[] = []
+
+    this.selectedBonusCardIds.forEach(id => {
+      const card = this.bonusCards.find(bonusCard => bonusCard.id === id)
+
+      if (card) {
+        selectedBonusCards.push(card)
+      }
+    })
+
+    this.selectedBonusCards = selectedBonusCards
+  }
+
+  private entriesByType(type: EntryListType): HelperBirdEntry[] {
+    return type === 'planned' ? this.plannedBirds : this.playedBirds
+  }
+
+  private setEntriesByType(type: EntryListType, entries: HelperBirdEntry[]): void {
+    if (type === 'planned') {
+      this.plannedBirds = entries
+    } else {
+      this.playedBirds = entries
+    }
+  }
+
+  private scoredBirds(): GameHelperScoredBird[] {
+    return [...this.playedBirds, ...this.plannedBirds].reduce((acc, entry) => {
+      if (entry.cardId === null) {
+        return acc
+      }
+
+      const card = this.findCard(entry.cardId)
+
+      if (card) {
+        acc.push({
+          id: entry.id,
+          card,
+          habitat: entry.habitat,
+        })
+      }
+
+      return acc
+    }, [] as GameHelperScoredBird[])
+  }
+
+  private isPlayerBonusCard(card: BonusCard): boolean {
+    return !this.bonusName(card).toLowerCase().includes('[automa]')
   }
 
   private toHabitat(habitat: string): Habitat {

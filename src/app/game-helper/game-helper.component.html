@@ -66,6 +66,37 @@
         </section>
 
         <section class="helper-section wide">
+            <h3>Bonus cards</h3>
+            <div class="bonus-editor">
+                <mat-form-field appearance="standard" class="bonus-field">
+                    <mat-label>Bonus card</mat-label>
+                    <input matInput type="text" [formControl]="bonusCardControl" [matAutocomplete]="bonusAuto">
+                    <mat-hint>Values use played + planned birds and add marginal bonus points</mat-hint>
+                </mat-form-field>
+                <mat-autocomplete #bonusAuto="matAutocomplete" [displayWith]="displayBonus"
+                    (optionSelected)="selectBonusCard($event)">
+                    <mat-option *ngFor="let card of filteredBonusCards" [value]="card">
+                        {{card['Bonus card']}}
+                    </mat-option>
+                </mat-autocomplete>
+            </div>
+
+            <mat-chip-list class="bonus-chip-list" *ngIf="selectedBonusCards.length; else noBonusCards">
+                <mat-chip *ngFor="let bonus of selectedBonusCards; trackBy: trackBonusCard"
+                    [selectable]="false" [removable]="true" (removed)="removeBonusCard(bonus.id)">
+                    {{bonus['Bonus card']}}
+                    <mat-icon matChipRemove aria-label="Remove bonus card">cancel</mat-icon>
+                </mat-chip>
+            </mat-chip-list>
+            <ng-template #noBonusCards>
+                <p class="empty-state">Add your bonus cards to include them in bird values.</p>
+            </ng-template>
+            <p class="progress-note" *ngIf="unsupportedBonusCardsLabel() as unsupportedBonusCards">
+                Not counted in bird values yet: {{unsupportedBonusCards}}.
+            </p>
+        </section>
+
+        <section class="helper-section wide">
             <h3>Plan birds to play</h3>
             <div class="bird-editor">
                 <mat-form-field appearance="standard" class="bird-field">
@@ -102,16 +133,45 @@
                 </button>
             </div>
 
-            <div class="entry-list" *ngIf="plannedBirds.length; else noPlannedBirds">
-                <div class="entry-row" *ngFor="let bird of plannedBirds; trackBy: trackEntry">
-                    <div>
-                        <strong>{{bird.name}}</strong>
-                        <span>{{habitatLabel(bird.habitat)}} · {{bird.inHand ? 'in hand' : 'draw needed'}} · {{foodCostFor(bird)}} food</span>
+            <div class="habitat-board" *ngIf="plannedBirds.length; else noPlannedBirds">
+                <div class="habitat-board-row" *ngFor="let habitat of habitats">
+                    <div class="habitat-row-label">
+                        <img src="assets/icons/png/{{habitat.icon}}.png" alt="" aria-hidden="true">
+                        <span>{{habitat.display}}</span>
                     </div>
-                    <button mat-icon-button type="button" aria-label="Remove planned bird"
-                        (click)="removePlannedBird(bird.id)">
-                        <mat-icon>close</mat-icon>
-                    </button>
+                    <div class="habitat-row-cards">
+                        <div class="entry-row board-entry"
+                            *ngFor="let bird of entriesForHabitat(plannedBirds, habitat.value); trackBy: trackEntry">
+                            <div class="entry-copy">
+                                <strong>{{bird.name}}</strong>
+                                <span>{{bird.inHand ? 'in hand' : 'draw needed'}} · {{foodCostFor(bird)}} food</span>
+                            </div>
+                            <div class="entry-side">
+                                <div class="entry-value" *ngIf="birdValue(bird) as value" [matTooltip]="birdValueTooltip(value)"
+                                    [attr.aria-label]="'Bird value ' + value.totalValue">
+                                    <span class="entry-value-total">Value {{value.totalValue}}</span>
+                                    <span class="entry-value-detail">base {{value.baseValue}}, bonus {{formatSignedValue(value.bonusValue)}}</span>
+                                </div>
+                                <div class="entry-actions">
+                                    <button mat-icon-button class="order-button" type="button" aria-label="Move planned bird left"
+                                        [disabled]="!canMoveEntry('planned', bird.id, -1)" (click)="moveEntry('planned', bird.id, -1)">
+                                        <mat-icon>chevron_left</mat-icon>
+                                    </button>
+                                    <button mat-icon-button class="order-button" type="button" aria-label="Move planned bird right"
+                                        [disabled]="!canMoveEntry('planned', bird.id, 1)" (click)="moveEntry('planned', bird.id, 1)">
+                                        <mat-icon>chevron_right</mat-icon>
+                                    </button>
+                                    <button mat-icon-button type="button" aria-label="Remove planned bird"
+                                        (click)="removePlannedBird(bird.id)">
+                                        <mat-icon>close</mat-icon>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="empty-state row-empty" *ngIf="!entriesForHabitat(plannedBirds, habitat.value).length">
+                            No planned birds in this row.
+                        </p>
+                    </div>
                 </div>
             </div>
             <ng-template #noPlannedBirds>
@@ -125,7 +185,7 @@
                 <mat-form-field appearance="standard" class="bird-field">
                     <mat-label>Bird card</mat-label>
                     <input matInput type="text" [formControl]="playedCardControl" [matAutocomplete]="playedAuto">
-                    <mat-hint>Only the row count affects egg estimates</mat-hint>
+                    <mat-hint>Rows affect egg estimates and row-based bonus values</mat-hint>
                 </mat-form-field>
                 <mat-autocomplete #playedAuto="matAutocomplete" [displayWith]="displayBird"
                     (optionSelected)="selectPlayedBird($event)">
@@ -151,16 +211,44 @@
                 </button>
             </div>
 
-            <div class="entry-list compact" *ngIf="playedBirds.length; else noPlayedBirds">
-                <div class="entry-row" *ngFor="let bird of playedBirds; trackBy: trackEntry">
-                    <div>
-                        <strong>{{bird.name}}</strong>
-                        <span>{{habitatLabel(bird.habitat)}}</span>
+            <div class="habitat-board" *ngIf="playedBirds.length; else noPlayedBirds">
+                <div class="habitat-board-row" *ngFor="let habitat of habitats">
+                    <div class="habitat-row-label">
+                        <img src="assets/icons/png/{{habitat.icon}}.png" alt="" aria-hidden="true">
+                        <span>{{habitat.display}}</span>
                     </div>
-                    <button mat-icon-button type="button" aria-label="Remove played bird"
-                        (click)="removePlayedBird(bird.id)">
-                        <mat-icon>close</mat-icon>
-                    </button>
+                    <div class="habitat-row-cards">
+                        <div class="entry-row board-entry"
+                            *ngFor="let bird of entriesForHabitat(playedBirds, habitat.value); trackBy: trackEntry">
+                            <div class="entry-copy">
+                                <strong>{{bird.name}}</strong>
+                            </div>
+                            <div class="entry-side">
+                                <div class="entry-value" *ngIf="birdValue(bird) as value" [matTooltip]="birdValueTooltip(value)"
+                                    [attr.aria-label]="'Bird value ' + value.totalValue">
+                                    <span class="entry-value-total">Value {{value.totalValue}}</span>
+                                    <span class="entry-value-detail">base {{value.baseValue}}, bonus {{formatSignedValue(value.bonusValue)}}</span>
+                                </div>
+                                <div class="entry-actions">
+                                    <button mat-icon-button class="order-button" type="button" aria-label="Move played bird left"
+                                        [disabled]="!canMoveEntry('played', bird.id, -1)" (click)="moveEntry('played', bird.id, -1)">
+                                        <mat-icon>chevron_left</mat-icon>
+                                    </button>
+                                    <button mat-icon-button class="order-button" type="button" aria-label="Move played bird right"
+                                        [disabled]="!canMoveEntry('played', bird.id, 1)" (click)="moveEntry('played', bird.id, 1)">
+                                        <mat-icon>chevron_right</mat-icon>
+                                    </button>
+                                    <button mat-icon-button type="button" aria-label="Remove played bird"
+                                        (click)="removePlayedBird(bird.id)">
+                                        <mat-icon>close</mat-icon>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="empty-state row-empty" *ngIf="!entriesForHabitat(playedBirds, habitat.value).length">
+                            No played birds in this row.
+                        </p>
+                    </div>
                 </div>
             </div>
             <ng-template #noPlayedBirds>
