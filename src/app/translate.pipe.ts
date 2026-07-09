@@ -9,7 +9,7 @@ export class TranslatePipe implements PipeTransform {
 
   translatedContent: {
     [key: string]: string
-  }
+  } = {}
 
   transform(value: string): string {
     return this.translatedContent[value] || value

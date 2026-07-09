@@ -65,7 +65,8 @@ export interface GameHelperBirdPreference {
   cardId: number | null
   name: string
   habitat: string
-  inHand: boolean
+  inHand?: boolean
+  planned?: boolean
 }
 
 export interface GameHelperFoodPreference {
@@ -80,11 +81,12 @@ export interface GameHelperFoodPreference {
 export interface GameHelperPreference {
   currentRound: number
   cubesLeft: number
+  handHabitat: string
   planHabitat: string
   playedHabitat: string
-  planInHand: boolean
   foodSupply: GameHelperFoodPreference
   selectedBonusCardIds: number[]
+  handBirds: GameHelperBirdPreference[]
   plannedBirds: GameHelperBirdPreference[]
   playedBirds: GameHelperBirdPreference[]
   manualFoodTurns: number | null

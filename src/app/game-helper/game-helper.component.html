@@ -1,39 +1,39 @@
 <mat-expansion-panel class="game-helper-panel">
     <mat-expansion-panel-header collapsedHeight="64px" expandedHeight="64px">
         <mat-panel-title>
-            <span>Game helper</span>
+            <span>{{'Game helper' | translate}}</span>
             <span class="turn-summary" [ngClass]="{warning: turnBalance() < 0}">
-                {{totalPlannedTurns()}} planned / {{totalTurnsLeft()}} turns left
+                {{totalPlannedTurns()}} {{'planned' | translate}} / {{totalTurnsLeft()}} {{'turns left' | translate}}
             </span>
         </mat-panel-title>
     </mat-expansion-panel-header>
 
     <div class="helper-grid">
         <section class="helper-section">
-            <h3>Game progress</h3>
+            <h3>{{'Game progress' | translate}}</h3>
             <div class="field-row">
                 <mat-form-field appearance="standard">
-                    <mat-label>Current round</mat-label>
+                    <mat-label>{{'Current round' | translate}}</mat-label>
                     <input matInput type="number" min="1" max="4" [ngModel]="currentRound"
                         (ngModelChange)="setCurrentRound($event)">
                 </mat-form-field>
                 <mat-form-field appearance="standard">
-                    <mat-label>Turns left this round</mat-label>
+                    <mat-label>{{'Turns left this round' | translate}}</mat-label>
                     <input matInput type="number" min="0" [ngModel]="cubesLeft"
                         (ngModelChange)="setCubesLeft($event)">
-                    <mat-hint>Total: {{totalTurnsLeft()}} through round 4</mat-hint>
+                    <mat-hint>{{'Total' | translate}}: {{totalTurnsLeft()}} {{'through round 4' | translate}}</mat-hint>
                 </mat-form-field>
             </div>
             <p class="progress-note" *ngIf="futureRoundTurns() > 0">
-                Includes {{futureRoundTurns()}} turns from later rounds.
+                {{'Includes' | translate}} {{futureRoundTurns()}} {{'turns from later rounds.' | translate}}
             </p>
         </section>
 
         <section class="helper-section wide">
-            <h3>Current food supply</h3>
+            <h3>{{'Current food supply' | translate}}</h3>
             <div class="food-supply-grid">
                 <mat-form-field appearance="standard" class="food-supply-field" *ngFor="let food of foods">
-                    <mat-label>{{food.display}}</mat-label>
+                    <mat-label>{{food.display | translate}}</mat-label>
                     <span matPrefix class="food-prefix">
                         <img src="assets/icons/png/{{food.icon}}.png" alt="" aria-hidden="true">
                     </span>
@@ -42,54 +42,54 @@
                 </mat-form-field>
             </div>
             <p class="progress-note">
-                {{foodSupplyTotal()}} food available. Food estimates subtract this supply before using the current
-                Forest action rate.
+                {{foodSupplyTotal()}} {{'food available.' | translate}}
+                {{'Food estimates subtract this supply before using the current Forest action rate.' | translate}}
             </p>
         </section>
 
         <section class="helper-section">
-            <h3>Planned action turns</h3>
+            <h3>{{'Planned action turns' | translate}}</h3>
             <div class="turn-grid">
                 <div class="turn-input">
                     <mat-form-field appearance="standard">
-                        <mat-label>Gain food turns</mat-label>
+                        <mat-label>{{'Gain food turns' | translate}}</mat-label>
                         <input matInput type="number" min="0" [ngModel]="turnInputValue('food')"
                             (ngModelChange)="setManualTurns('food', $event)">
-                        <mat-hint>Auto: {{estimate().foodTurns}} turns for {{estimate().foodMissing}} of {{estimate().foodNeeded}} food at {{estimate().foodPerTurn}}/turn</mat-hint>
+                        <mat-hint>{{'Auto' | translate}}: {{estimate().foodTurns}} {{'turns for' | translate}} {{estimate().foodMissing}} {{'of' | translate}} {{estimate().foodNeeded}} {{'food at' | translate}} {{estimate().foodPerTurn}}{{'/turn' | translate}}</mat-hint>
                     </mat-form-field>
                     <button mat-button color="primary" type="button" [disabled]="turnIsAutomatic('food')"
-                        (click)="resetManualTurns('food')">Auto</button>
+                        (click)="resetManualTurns('food')">{{'Auto' | translate}}</button>
                 </div>
                 <div class="turn-input">
                     <mat-form-field appearance="standard">
-                        <mat-label>Lay eggs turns</mat-label>
+                        <mat-label>{{'Lay eggs turns' | translate}}</mat-label>
                         <input matInput type="number" min="0" [ngModel]="turnInputValue('eggs')"
                             (ngModelChange)="setManualTurns('eggs', $event)">
-                        <mat-hint>Auto: {{estimate().eggTurns}} turns for {{estimate().eggsNeeded}} eggs</mat-hint>
+                        <mat-hint>{{'Auto' | translate}}: {{estimate().eggTurns}} {{'turns for' | translate}} {{estimate().eggsNeeded}} {{'eggs' | translate}}</mat-hint>
                     </mat-form-field>
                     <button mat-button color="primary" type="button" [disabled]="turnIsAutomatic('eggs')"
-                        (click)="resetManualTurns('eggs')">Auto</button>
+                        (click)="resetManualTurns('eggs')">{{'Auto' | translate}}</button>
                 </div>
                 <div class="turn-input">
                     <mat-form-field appearance="standard">
-                        <mat-label>Draw cards turns</mat-label>
+                        <mat-label>{{'Draw cards turns' | translate}}</mat-label>
                         <input matInput type="number" min="0" [ngModel]="turnInputValue('cards')"
                             (ngModelChange)="setManualTurns('cards', $event)">
-                        <mat-hint>Auto: {{estimate().drawTurns}} useful cards</mat-hint>
+                        <mat-hint>{{'Auto' | translate}}: {{estimate().drawTurns}} {{'useful cards' | translate}}</mat-hint>
                     </mat-form-field>
                     <button mat-button color="primary" type="button" [disabled]="turnIsAutomatic('cards')"
-                        (click)="resetManualTurns('cards')">Auto</button>
+                        (click)="resetManualTurns('cards')">{{'Auto' | translate}}</button>
                 </div>
             </div>
         </section>
 
         <section class="helper-section wide">
-            <h3>Bonus cards</h3>
+            <h3>{{'Bonus cards' | translate}}</h3>
             <div class="bonus-editor">
                 <mat-form-field appearance="standard" class="bonus-field">
-                    <mat-label>Bonus card</mat-label>
+                    <mat-label>{{'Bonus card' | translate}}</mat-label>
                     <input matInput type="text" [formControl]="bonusCardControl" [matAutocomplete]="bonusAuto">
-                    <mat-hint>Values use played + planned birds and add marginal bonus points</mat-hint>
+                    <mat-hint>{{'Values use played birds, checked hand plans, and undrawn planned birds.' | translate}}</mat-hint>
                 </mat-form-field>
                 <mat-autocomplete #bonusAuto="matAutocomplete" [displayWith]="displayBonus"
                     (optionSelected)="selectBonusCard($event)">
@@ -103,24 +103,112 @@
                 <mat-chip *ngFor="let bonus of selectedBonusCards; trackBy: trackBonusCard"
                     [selectable]="false" [removable]="true" (removed)="removeBonusCard(bonus.id)">
                     {{bonus['Bonus card']}}
-                    <mat-icon matChipRemove aria-label="Remove bonus card">cancel</mat-icon>
+                    <mat-icon matChipRemove [attr.aria-label]="'Remove bonus card' | translate">cancel</mat-icon>
                 </mat-chip>
             </mat-chip-list>
             <ng-template #noBonusCards>
-                <p class="empty-state">Add your bonus cards to include them in bird values.</p>
+                <p class="empty-state">{{'Add your bonus cards to include them in bird values.' | translate}}</p>
             </ng-template>
             <p class="progress-note" *ngIf="unsupportedBonusCardsLabel() as unsupportedBonusCards">
-                Not counted in bird values yet: {{unsupportedBonusCards}}.
+                {{'Not counted in bird values yet' | translate}}: {{unsupportedBonusCards}}.
             </p>
         </section>
 
         <section class="helper-section wide">
-            <h3>Plan birds to play</h3>
+            <h3>{{'Hand and draw plan' | translate}}</h3>
+
+            <div class="subsection-header">
+                <h4>{{'Player hand' | translate}}</h4>
+                <p class="progress-note">{{'Check hand cards only when you plan to play them.' | translate}}</p>
+            </div>
             <div class="bird-editor">
                 <mat-form-field appearance="standard" class="bird-field">
-                    <mat-label>Bird card</mat-label>
+                    <mat-label>{{'Bird card' | translate}}</mat-label>
+                    <input matInput type="text" [formControl]="handCardControl" [matAutocomplete]="handAuto">
+                    <mat-hint>{{'Choose a card in your hand' | translate}}</mat-hint>
+                </mat-form-field>
+                <mat-autocomplete #handAuto="matAutocomplete" [displayWith]="displayBird"
+                    (optionSelected)="selectHandBird($event)">
+                    <mat-option *ngFor="let card of filteredHandBirdCards" [value]="card">
+                        {{card['Common name']}}
+                    </mat-option>
+                </mat-autocomplete>
+
+                <mat-form-field appearance="standard" class="habitat-field">
+                    <mat-label>{{'Row' | translate}}</mat-label>
+                    <mat-select [ngModel]="handHabitat" (ngModelChange)="setHandHabitat($event)">
+                        <mat-option *ngFor="let habitat of habitats" [value]="habitat.value">
+                            <span class="habitat-option">
+                                <img src="assets/icons/png/{{habitat.icon}}.png" alt="" aria-hidden="true">
+                                {{habitat.display | translate}}
+                            </span>
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <button mat-raised-button color="primary" type="button" (click)="addHandBird()">
+                    {{'Add hand card' | translate}}
+                </button>
+            </div>
+
+            <div class="habitat-board" *ngIf="handBirds.length; else noHandBirds">
+                <div class="habitat-board-row" *ngFor="let habitat of habitats">
+                    <div class="habitat-row-label">
+                        <img src="assets/icons/png/{{habitat.icon}}.png" alt="" aria-hidden="true">
+                        <span>{{habitat.display | translate}}</span>
+                    </div>
+                    <div class="habitat-row-cards">
+                        <div class="entry-row board-entry"
+                            *ngFor="let bird of entriesForHabitat(handBirds, habitat.value); trackBy: trackEntry">
+                            <div class="entry-copy">
+                                <strong>{{entryDisplayName(bird)}}</strong>
+                                <label class="entry-plan-toggle">
+                                    <input type="checkbox" [ngModel]="bird.planned"
+                                        (ngModelChange)="setHandBirdPlanned(bird.id, $event)">
+                                    {{'Planned' | translate}}
+                                </label>
+                                <span>{{(bird.planned ? 'planned to play' : 'not planned') | translate}} · {{foodCostFor(bird)}} {{'food' | translate}}</span>
+                            </div>
+                            <div class="entry-side">
+                                <div class="entry-value" *ngIf="birdValue(bird) as value" [matTooltip]="birdValueTooltip(value)"
+                                    [attr.aria-label]="birdValueAriaLabel(value)">
+                                    <span class="entry-value-total">{{'Value' | translate}} {{value.totalValue}}</span>
+                                    <span class="entry-value-detail">{{'base' | translate}} {{value.baseValue}}, {{'bonus' | translate}} {{formatSignedValue(value.bonusValue)}}</span>
+                                </div>
+                                <div class="entry-actions">
+                                    <button mat-icon-button class="order-button" type="button" [attr.aria-label]="'Move hand bird left' | translate"
+                                        [disabled]="!canMoveEntry('hand', bird.id, -1)" (click)="moveEntry('hand', bird.id, -1)">
+                                        <mat-icon>chevron_left</mat-icon>
+                                    </button>
+                                    <button mat-icon-button class="order-button" type="button" [attr.aria-label]="'Move hand bird right' | translate"
+                                        [disabled]="!canMoveEntry('hand', bird.id, 1)" (click)="moveEntry('hand', bird.id, 1)">
+                                        <mat-icon>chevron_right</mat-icon>
+                                    </button>
+                                    <button mat-icon-button type="button" [attr.aria-label]="'Remove hand bird' | translate"
+                                        (click)="removeHandBird(bird.id)">
+                                        <mat-icon>close</mat-icon>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <p class="empty-state row-empty" *ngIf="!entriesForHabitat(handBirds, habitat.value).length">
+                            {{'No hand birds in this row.' | translate}}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <ng-template #noHandBirds>
+                <p class="empty-state">{{'Add hand cards to compare value, then check the cards you plan to play.' | translate}}</p>
+            </ng-template>
+
+            <div class="subsection-header">
+                <h4>{{'Undrawn planned birds' | translate}}</h4>
+            </div>
+            <div class="bird-editor">
+                <mat-form-field appearance="standard" class="bird-field">
+                    <mat-label>{{'Bird card' | translate}}</mat-label>
                     <input matInput type="text" [formControl]="planCardControl" [matAutocomplete]="planAuto">
-                    <mat-hint>Choose a card, or leave blank for an undrawn card</mat-hint>
+                    <mat-hint>{{'Choose a card, or leave blank for an unknown draw' | translate}}</mat-hint>
                 </mat-form-field>
                 <mat-autocomplete #planAuto="matAutocomplete" [displayWith]="displayBird"
                     (optionSelected)="selectPlanBird($event)">
@@ -130,24 +218,19 @@
                 </mat-autocomplete>
 
                 <mat-form-field appearance="standard" class="habitat-field">
-                    <mat-label>Row</mat-label>
+                    <mat-label>{{'Row' | translate}}</mat-label>
                     <mat-select [ngModel]="planHabitat" (ngModelChange)="setPlanHabitat($event)">
                         <mat-option *ngFor="let habitat of habitats" [value]="habitat.value">
                             <span class="habitat-option">
                                 <img src="assets/icons/png/{{habitat.icon}}.png" alt="" aria-hidden="true">
-                                {{habitat.display}}
+                                {{habitat.display | translate}}
                             </span>
                         </mat-option>
                     </mat-select>
                 </mat-form-field>
 
-                <label class="checkbox-field">
-                    <input type="checkbox" [ngModel]="planInHand" (ngModelChange)="setPlanInHand($event)">
-                    In hand
-                </label>
-
                 <button mat-raised-button color="primary" type="button" (click)="addPlannedBird()">
-                    Add plan
+                    {{'Add draw plan' | translate}}
                 </button>
             </div>
 
@@ -155,31 +238,31 @@
                 <div class="habitat-board-row" *ngFor="let habitat of habitats">
                     <div class="habitat-row-label">
                         <img src="assets/icons/png/{{habitat.icon}}.png" alt="" aria-hidden="true">
-                        <span>{{habitat.display}}</span>
+                        <span>{{habitat.display | translate}}</span>
                     </div>
                     <div class="habitat-row-cards">
                         <div class="entry-row board-entry"
                             *ngFor="let bird of entriesForHabitat(plannedBirds, habitat.value); trackBy: trackEntry">
                             <div class="entry-copy">
-                                <strong>{{bird.name}}</strong>
-                                <span>{{bird.inHand ? 'in hand' : 'draw needed'}} · {{foodCostFor(bird)}} food</span>
+                                <strong>{{entryDisplayName(bird)}}</strong>
+                                <span>{{'draw needed' | translate}} · {{foodCostFor(bird)}} {{'food' | translate}}</span>
                             </div>
                             <div class="entry-side">
                                 <div class="entry-value" *ngIf="birdValue(bird) as value" [matTooltip]="birdValueTooltip(value)"
-                                    [attr.aria-label]="'Bird value ' + value.totalValue">
-                                    <span class="entry-value-total">Value {{value.totalValue}}</span>
-                                    <span class="entry-value-detail">base {{value.baseValue}}, bonus {{formatSignedValue(value.bonusValue)}}</span>
+                                    [attr.aria-label]="birdValueAriaLabel(value)">
+                                    <span class="entry-value-total">{{'Value' | translate}} {{value.totalValue}}</span>
+                                    <span class="entry-value-detail">{{'base' | translate}} {{value.baseValue}}, {{'bonus' | translate}} {{formatSignedValue(value.bonusValue)}}</span>
                                 </div>
                                 <div class="entry-actions">
-                                    <button mat-icon-button class="order-button" type="button" aria-label="Move planned bird left"
+                                    <button mat-icon-button class="order-button" type="button" [attr.aria-label]="'Move planned bird left' | translate"
                                         [disabled]="!canMoveEntry('planned', bird.id, -1)" (click)="moveEntry('planned', bird.id, -1)">
                                         <mat-icon>chevron_left</mat-icon>
                                     </button>
-                                    <button mat-icon-button class="order-button" type="button" aria-label="Move planned bird right"
+                                    <button mat-icon-button class="order-button" type="button" [attr.aria-label]="'Move planned bird right' | translate"
                                         [disabled]="!canMoveEntry('planned', bird.id, 1)" (click)="moveEntry('planned', bird.id, 1)">
                                         <mat-icon>chevron_right</mat-icon>
                                     </button>
-                                    <button mat-icon-button type="button" aria-label="Remove planned bird"
+                                    <button mat-icon-button type="button" [attr.aria-label]="'Remove planned bird' | translate"
                                         (click)="removePlannedBird(bird.id)">
                                         <mat-icon>close</mat-icon>
                                     </button>
@@ -187,23 +270,23 @@
                             </div>
                         </div>
                         <p class="empty-state row-empty" *ngIf="!entriesForHabitat(plannedBirds, habitat.value).length">
-                            No planned birds in this row.
+                            {{'No undrawn planned birds in this row.' | translate}}
                         </p>
                     </div>
                 </div>
             </div>
             <ng-template #noPlannedBirds>
-                <p class="empty-state">Add birds you want to play.</p>
+                <p class="empty-state">{{'Add cards you still need to draw before playing.' | translate}}</p>
             </ng-template>
         </section>
 
         <section class="helper-section wide">
-            <h3>Birds already played</h3>
+            <h3>{{'Birds already played' | translate}}</h3>
             <div class="bird-editor">
                 <mat-form-field appearance="standard" class="bird-field">
-                    <mat-label>Bird card</mat-label>
+                    <mat-label>{{'Bird card' | translate}}</mat-label>
                     <input matInput type="text" [formControl]="playedCardControl" [matAutocomplete]="playedAuto">
-                    <mat-hint>Rows affect action estimates and row-based bonus values</mat-hint>
+                    <mat-hint>{{'Rows affect action estimates and row-based bonus values' | translate}}</mat-hint>
                 </mat-form-field>
                 <mat-autocomplete #playedAuto="matAutocomplete" [displayWith]="displayBird"
                     (optionSelected)="selectPlayedBird($event)">
@@ -213,19 +296,19 @@
                 </mat-autocomplete>
 
                 <mat-form-field appearance="standard" class="habitat-field">
-                    <mat-label>Row</mat-label>
+                    <mat-label>{{'Row' | translate}}</mat-label>
                     <mat-select [ngModel]="playedHabitat" (ngModelChange)="setPlayedHabitat($event)">
                         <mat-option *ngFor="let habitat of habitats" [value]="habitat.value">
                             <span class="habitat-option">
                                 <img src="assets/icons/png/{{habitat.icon}}.png" alt="" aria-hidden="true">
-                                {{habitat.display}}
+                                {{habitat.display | translate}}
                             </span>
                         </mat-option>
                     </mat-select>
                 </mat-form-field>
 
                 <button mat-raised-button color="primary" type="button" (click)="addPlayedBird()">
-                    Add played
+                    {{'Add played' | translate}}
                 </button>
             </div>
 
@@ -233,30 +316,30 @@
                 <div class="habitat-board-row" *ngFor="let habitat of habitats">
                     <div class="habitat-row-label">
                         <img src="assets/icons/png/{{habitat.icon}}.png" alt="" aria-hidden="true">
-                        <span>{{habitat.display}}</span>
+                        <span>{{habitat.display | translate}}</span>
                     </div>
                     <div class="habitat-row-cards">
                         <div class="entry-row board-entry"
                             *ngFor="let bird of entriesForHabitat(playedBirds, habitat.value); trackBy: trackEntry">
                             <div class="entry-copy">
-                                <strong>{{bird.name}}</strong>
+                                <strong>{{entryDisplayName(bird)}}</strong>
                             </div>
                             <div class="entry-side">
                                 <div class="entry-value" *ngIf="birdValue(bird) as value" [matTooltip]="birdValueTooltip(value)"
-                                    [attr.aria-label]="'Bird value ' + value.totalValue">
-                                    <span class="entry-value-total">Value {{value.totalValue}}</span>
-                                    <span class="entry-value-detail">base {{value.baseValue}}, bonus {{formatSignedValue(value.bonusValue)}}</span>
+                                    [attr.aria-label]="birdValueAriaLabel(value)">
+                                    <span class="entry-value-total">{{'Value' | translate}} {{value.totalValue}}</span>
+                                    <span class="entry-value-detail">{{'base' | translate}} {{value.baseValue}}, {{'bonus' | translate}} {{formatSignedValue(value.bonusValue)}}</span>
                                 </div>
                                 <div class="entry-actions">
-                                    <button mat-icon-button class="order-button" type="button" aria-label="Move played bird left"
+                                    <button mat-icon-button class="order-button" type="button" [attr.aria-label]="'Move played bird left' | translate"
                                         [disabled]="!canMoveEntry('played', bird.id, -1)" (click)="moveEntry('played', bird.id, -1)">
                                         <mat-icon>chevron_left</mat-icon>
                                     </button>
-                                    <button mat-icon-button class="order-button" type="button" aria-label="Move played bird right"
+                                    <button mat-icon-button class="order-button" type="button" [attr.aria-label]="'Move played bird right' | translate"
                                         [disabled]="!canMoveEntry('played', bird.id, 1)" (click)="moveEntry('played', bird.id, 1)">
                                         <mat-icon>chevron_right</mat-icon>
                                     </button>
-                                    <button mat-icon-button type="button" aria-label="Remove played bird"
+                                    <button mat-icon-button type="button" [attr.aria-label]="'Remove played bird' | translate"
                                         (click)="removePlayedBird(bird.id)">
                                         <mat-icon>close</mat-icon>
                                     </button>
@@ -264,46 +347,46 @@
                             </div>
                         </div>
                         <p class="empty-state row-empty" *ngIf="!entriesForHabitat(playedBirds, habitat.value).length">
-                            No played birds in this row.
+                            {{'No played birds in this row.' | translate}}
                         </p>
                     </div>
                 </div>
             </div>
             <ng-template #noPlayedBirds>
-                <p class="empty-state">Add current board birds to estimate row action gains and egg costs.</p>
+                <p class="empty-state">{{'Add current board birds to estimate row action gains and egg costs.' | translate}}</p>
             </ng-template>
         </section>
 
         <section class="helper-section wide estimate-section" [ngClass]="{warning: turnBalance() < 0}">
-            <h3>Estimated plan</h3>
+            <h3>{{'Estimated plan' | translate}}</h3>
             <div class="estimate-grid">
                 <div>
                     <strong>{{estimate().playTurns}}</strong>
-                    <span>play bird turns</span>
+                    <span>{{'play bird turns' | translate}}</span>
                 </div>
                 <div>
                     <strong>{{turnInputValue('food')}}</strong>
-                    <span>food turns · {{estimate().foodMissing}} food missing</span>
+                    <span>{{'food turns' | translate}} · {{estimate().foodMissing}} {{'food missing' | translate}}</span>
                 </div>
                 <div>
                     <strong>{{turnInputValue('eggs')}}</strong>
-                    <span>egg turns</span>
+                    <span>{{'egg turns' | translate}}</span>
                 </div>
                 <div>
                     <strong>{{turnInputValue('cards')}}</strong>
-                    <span>draw turns</span>
+                    <span>{{'draw turns' | translate}}</span>
                 </div>
                 <div>
                     <strong>{{totalPlannedTurns()}}</strong>
-                    <span>total planned turns</span>
+                    <span>{{'total planned turns' | translate}}</span>
                 </div>
                 <div>
                     <strong>{{turnBalance()}}</strong>
-                    <span>{{turnBalance() >= 0 ? 'turns still free' : 'turns over limit'}}</span>
+                    <span>{{(turnBalance() >= 0 ? 'turns still free' : 'turns over limit') | translate}}</span>
                 </div>
             </div>
             <p *ngIf="estimate().overfilledRows.length" class="warning-text">
-                Row limit warning: {{overfilledRowLabels()}} has more than 5 birds in this plan.
+                {{'Row limit warning' | translate}}: {{overfilledRowLabels()}} {{'has more than 5 birds in this plan.' | translate}}
             </p>
         </section>
     </div>

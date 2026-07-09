@@ -5,6 +5,7 @@ import { Store } from '@ngrx/store'
 import { Subscription } from 'rxjs'
 import { GameHelperBirdPreference, GameHelperFoodPreference, GameHelperPreference, PreferencesStorageService } from '../preferences-storage.service'
 import { AppState, BirdCard, BonusCard } from '../store/app.interfaces'
+import { TranslatePipe } from '../translate.pipe'
 import {
   BirdValueBreakdown,
   calculateGameHelperBirdValue,
@@ -14,7 +15,7 @@ import {
 
 type Habitat = 'forest' | 'grassland' | 'wetland'
 type TurnType = 'food' | 'eggs' | 'cards'
-type EntryListType = 'planned' | 'played'
+type EntryListType = 'hand' | 'planned' | 'played'
 type FoodType = 'invertebrate' | 'seed' | 'fruit' | 'fish' | 'rodent' | 'nectar'
 type FoodCountMap = { [key in FoodType]: number }
 
@@ -37,6 +38,7 @@ interface HelperBirdEntry {
   name: string
   habitat: Habitat
   inHand: boolean
+  planned: boolean
 }
 
 interface HelperEstimate {
@@ -78,14 +80,16 @@ export class GameHelperComponent implements OnDestroy {
   cubesLeft = 8
   foodSupply: FoodCountMap = this.emptyFoodCounts()
 
+  handCardControl = new FormControl('')
   planCardControl = new FormControl('')
   playedCardControl = new FormControl('')
   bonusCardControl = new FormControl('')
 
+  handHabitat: Habitat = 'forest'
   planHabitat: Habitat = 'forest'
   playedHabitat: Habitat = 'forest'
-  planInHand = true
 
+  handBirds: HelperBirdEntry[] = []
   plannedBirds: HelperBirdEntry[] = []
   playedBirds: HelperBirdEntry[] = []
   selectedBonusCardIds: number[] = []
@@ -97,6 +101,7 @@ export class GameHelperComponent implements OnDestroy {
 
   birdCards: BirdCard[] = []
   bonusCards: BonusCard[] = []
+  filteredHandBirdCards: BirdCard[] = []
   filteredPlanBirdCards: BirdCard[] = []
   filteredPlayedBirdCards: BirdCard[] = []
   filteredBonusCards: BonusCard[] = []
@@ -122,7 +127,8 @@ export class GameHelperComponent implements OnDestroy {
 
   constructor(
     private store: Store<{ app: AppState }>,
-    private preferences: PreferencesStorageService
+    private preferences: PreferencesStorageService,
+    private translate: TranslatePipe
   ) {
     this.restorePreferences()
 
@@ -130,6 +136,7 @@ export class GameHelperComponent implements OnDestroy {
       this.store.select(({ app }) => app.birdCards).subscribe(cards => {
         this.birdCards = [...cards].sort((a, b) => this.birdName(a).localeCompare(this.birdName(b)))
         this.refreshEntryNames()
+        this.updateHandOptions()
         this.updatePlanOptions()
         this.updatePlayedOptions()
       })
@@ -145,6 +152,7 @@ export class GameHelperComponent implements OnDestroy {
       })
     )
 
+    this.subscription.add(this.handCardControl.valueChanges.subscribe(() => this.updateHandOptions()))
     this.subscription.add(this.planCardControl.valueChanges.subscribe(() => this.updatePlanOptions()))
     this.subscription.add(this.playedCardControl.valueChanges.subscribe(() => this.updatePlayedOptions()))
     this.subscription.add(this.bonusCardControl.valueChanges.subscribe(() => this.updateBonusOptions()))
@@ -154,22 +162,32 @@ export class GameHelperComponent implements OnDestroy {
     this.subscription.unsubscribe()
   }
 
+  addHandBird(): void {
+    const entry = this.createEntry(this.handCardControl.value, this.handHabitat, true, false)
+
+    if (!entry.name.trim()) {
+      entry.name = 'Hand bird'
+    }
+
+    this.handBirds = [...this.handBirds, entry]
+    this.handCardControl.setValue('')
+    this.savePreferences()
+  }
+
   addPlannedBird(): void {
-    const entry = this.createEntry(this.planCardControl.value, this.planHabitat, this.planInHand)
+    const entry = this.createEntry(this.planCardControl.value, this.planHabitat, false, true)
 
     if (!entry.name.trim()) {
       entry.name = 'Undrawn bird'
-      entry.inHand = false
     }
 
     this.plannedBirds = [...this.plannedBirds, entry]
     this.planCardControl.setValue('')
-    this.planInHand = true
     this.savePreferences()
   }
 
   addPlayedBird(): void {
-    const entry = this.createEntry(this.playedCardControl.value, this.playedHabitat, true)
+    const entry = this.createEntry(this.playedCardControl.value, this.playedHabitat, true, true)
 
     if (!entry.name.trim()) {
       entry.name = 'Played bird'
@@ -177,6 +195,11 @@ export class GameHelperComponent implements OnDestroy {
 
     this.playedBirds = [...this.playedBirds, entry]
     this.playedCardControl.setValue('')
+    this.savePreferences()
+  }
+
+  removeHandBird(id: number): void {
+    this.handBirds = this.handBirds.filter(bird => bird.id !== id)
     this.savePreferences()
   }
 
@@ -188,6 +211,10 @@ export class GameHelperComponent implements OnDestroy {
   removePlayedBird(id: number): void {
     this.playedBirds = this.playedBirds.filter(bird => bird.id !== id)
     this.savePreferences()
+  }
+
+  selectHandBird(event: MatAutocompleteSelectedEvent): void {
+    this.handCardControl.setValue(event.option.value as BirdCard)
   }
 
   selectPlanBird(event: MatAutocompleteSelectedEvent): void {
@@ -262,6 +289,11 @@ export class GameHelperComponent implements OnDestroy {
     this.savePreferences()
   }
 
+  setHandHabitat(habitat: Habitat): void {
+    this.handHabitat = this.toHabitat(habitat)
+    this.savePreferences()
+  }
+
   setPlanHabitat(habitat: Habitat): void {
     this.planHabitat = this.toHabitat(habitat)
     this.savePreferences()
@@ -272,8 +304,9 @@ export class GameHelperComponent implements OnDestroy {
     this.savePreferences()
   }
 
-  setPlanInHand(inHand: boolean): void {
-    this.planInHand = inHand
+  setHandBirdPlanned(id: number, planned: boolean): void {
+    this.handBirds = this.handBirds.map(bird =>
+      bird.id === id ? { ...bird, planned } : bird)
     this.savePreferences()
   }
 
@@ -302,7 +335,7 @@ export class GameHelperComponent implements OnDestroy {
   }
 
   totalPlannedTurns(): number {
-    return this.plannedBirds.length
+    return this.plannedToPlayBirds().length
       + this.turnInputValue('food')
       + this.turnInputValue('eggs')
       + this.turnInputValue('cards')
@@ -329,19 +362,19 @@ export class GameHelperComponent implements OnDestroy {
 
     let eggsNeeded = 0
 
-    this.plannedBirds.forEach(bird => {
+    this.plannedToPlayBirds().forEach(bird => {
       const nextSlot = rowCounts[bird.habitat] + 1
       eggsNeeded += this.eggCostForSlot(nextSlot)
       rowCounts[bird.habitat] += 1
     })
 
-    const foodNeeded = this.plannedBirds.reduce((sum, bird) => sum + this.foodCostFor(bird), 0)
+    const foodNeeded = this.plannedToPlayBirds().reduce((sum, bird) => sum + this.foodCostFor(bird), 0)
     const foodMissing = this.foodMissingAfterSupply()
     const foodPerTurn = this.foodPerTurn(currentRowCounts.forest)
-    const drawTurns = this.plannedBirds.filter(bird => !bird.inHand).length
+    const drawTurns = this.plannedBirds.length
     const foodTurns = Math.ceil(foodMissing / foodPerTurn)
     const eggTurns = Math.ceil(eggsNeeded / 2)
-    const playTurns = this.plannedBirds.length
+    const playTurns = this.plannedToPlayBirds().length
     const overfilledRows = this.habitats
       .filter(habitat => rowCounts[habitat.value] > 5)
       .map(habitat => habitat.value)
@@ -362,7 +395,7 @@ export class GameHelperComponent implements OnDestroy {
   }
 
   foodCostFor(entry: HelperBirdEntry): number {
-    if (!entry.inHand || entry.cardId === null) {
+    if (entry.cardId === null) {
       return 2
     }
 
@@ -372,7 +405,7 @@ export class GameHelperComponent implements OnDestroy {
 
   habitatLabel(habitat: Habitat): string {
     const option = this.habitats.find(item => item.value === habitat)
-    return option ? option.display : habitat
+    return option ? this.translateText(option.display) : habitat
   }
 
   overfilledRowLabels(): string {
@@ -393,6 +426,10 @@ export class GameHelperComponent implements OnDestroy {
 
   entriesForHabitat(entries: HelperBirdEntry[], habitat: Habitat): HelperBirdEntry[] {
     return entries.filter(entry => entry.habitat === habitat)
+  }
+
+  entryDisplayName(entry: HelperBirdEntry): string {
+    return this.translateText(entry.name)
   }
 
   canMoveEntry(type: EntryListType, id: number, direction: number): boolean {
@@ -449,7 +486,7 @@ export class GameHelperComponent implements OnDestroy {
     return calculateGameHelperBirdValue(
       card,
       entry.id,
-      this.scoredBirds(),
+      this.scoredBirdsForValue(entry),
       this.selectedBonusCards,
     )
   }
@@ -461,19 +498,23 @@ export class GameHelperComponent implements OnDestroy {
     const unsupportedBonuses = value.unsupportedBonusCards
       .map(contribution => contribution.bonusCardName)
     const details = [
-      `Base value: ${value.baseValue}`,
-      `Bonus value: ${this.formatSignedValue(value.bonusValue)}`,
+      `${this.translateText('Base value')}: ${value.baseValue}`,
+      `${this.translateText('Bonus value')}: ${this.formatSignedValue(value.bonusValue)}`,
     ]
 
     if (countedBonuses.length) {
-      details.push(`Bonus cards: ${countedBonuses.join(', ')}`)
+      details.push(`${this.translateText('Bonus cards')}: ${countedBonuses.join(', ')}`)
     }
 
     if (unsupportedBonuses.length) {
-      details.push(`Not counted: ${unsupportedBonuses.join(', ')}`)
+      details.push(`${this.translateText('Not counted')}: ${unsupportedBonuses.join(', ')}`)
     }
 
     return details.join('\n')
+  }
+
+  birdValueAriaLabel(value: BirdValueBreakdown): string {
+    return `${this.translateText('Bird value')} ${value.totalValue}`
   }
 
   formatSignedValue(value: number): string {
@@ -487,7 +528,7 @@ export class GameHelperComponent implements OnDestroy {
       .join(', ')
   }
 
-  private createEntry(value: BirdCard | string, habitat: Habitat, inHand: boolean): HelperBirdEntry {
+  private createEntry(value: BirdCard | string, habitat: Habitat, inHand: boolean, planned: boolean): HelperBirdEntry {
     const card = typeof value === 'string' ? this.findCardByName(value) : value
     const typedName = typeof value === 'string' ? value.trim() : ''
 
@@ -497,7 +538,12 @@ export class GameHelperComponent implements OnDestroy {
       name: card ? this.birdName(card) : typedName,
       habitat,
       inHand,
+      planned,
     }
+  }
+
+  private updateHandOptions(): void {
+    this.filteredHandBirdCards = this.filterBirdCards(this.handCardControl.value)
   }
 
   private updatePlanOptions(): void {
@@ -602,10 +648,10 @@ export class GameHelperComponent implements OnDestroy {
     let wildNeeded = 0
     let unknownNeeded = 0
 
-    this.plannedBirds.forEach(entry => {
+    this.plannedToPlayBirds().forEach(entry => {
       const card = entry.cardId === null ? null : this.findCard(entry.cardId)
 
-      if (!entry.inHand || !card) {
+      if (!card) {
         unknownNeeded += this.foodCostFor(entry)
         return
       }
@@ -739,18 +785,30 @@ export class GameHelperComponent implements OnDestroy {
 
     this.currentRound = this.toRound(this.parseWholeNumber(preferences.currentRound))
     this.cubesLeft = this.parseWholeNumber(preferences.cubesLeft) || 0
+    this.handHabitat = this.toHabitat(preferences.handHabitat)
     this.planHabitat = this.toHabitat(preferences.planHabitat)
     this.playedHabitat = this.toHabitat(preferences.playedHabitat)
-    this.planInHand = preferences.planInHand
     this.foodSupply = this.cloneFoodCounts(preferences.foodSupply)
     this.selectedBonusCardIds = this.restoreBonusCardIds(preferences.selectedBonusCardIds)
-    this.plannedBirds = this.restoreEntries(preferences.plannedBirds)
-    this.playedBirds = this.restoreEntries(preferences.playedBirds)
+    const restoredHandBirds = this.restoreEntries(preferences.handBirds, true)
+    const restoredPlannedBirds = this.restoreEntries(preferences.plannedBirds, false)
+
+    this.handBirds = [
+      ...restoredHandBirds,
+      ...restoredPlannedBirds
+        .filter(entry => entry.inHand)
+        .map(entry => ({ ...entry, planned: true })),
+    ]
+    this.plannedBirds = restoredPlannedBirds
+      .filter(entry => !entry.inHand)
+      .map(entry => ({ ...entry, planned: true }))
+    this.playedBirds = this.restoreEntries(preferences.playedBirds, true)
     this.manualFoodTurns = this.parseManualTurns(preferences.manualFoodTurns)
     this.manualEggTurns = this.parseManualTurns(preferences.manualEggTurns)
     this.manualCardTurns = this.parseManualTurns(preferences.manualCardTurns)
     this.nextEntryId = Math.max(
       0,
+      ...this.handBirds.map(bird => bird.id),
       ...this.plannedBirds.map(bird => bird.id),
       ...this.playedBirds.map(bird => bird.id)
     ) + 1
@@ -760,11 +818,12 @@ export class GameHelperComponent implements OnDestroy {
     return {
       currentRound: this.currentRound,
       cubesLeft: this.cubesLeft,
+      handHabitat: this.handHabitat,
       planHabitat: this.planHabitat,
       playedHabitat: this.playedHabitat,
-      planInHand: this.planInHand,
       foodSupply: this.foodSupply,
       selectedBonusCardIds: this.selectedBonusCardIds,
+      handBirds: this.handBirds,
       plannedBirds: this.plannedBirds,
       playedBirds: this.playedBirds,
       manualFoodTurns: this.manualFoodTurns,
@@ -773,15 +832,16 @@ export class GameHelperComponent implements OnDestroy {
     }
   }
 
-  private restoreEntries(entries: GameHelperBirdPreference[]): HelperBirdEntry[] {
-    return entries
+  private restoreEntries(entries: GameHelperBirdPreference[], defaultInHand: boolean): HelperBirdEntry[] {
+    return (entries || [])
       .filter(entry => entry && entry.name)
       .map(entry => ({
         id: this.parseWholeNumber(entry.id) || this.nextEntryId++,
         cardId: entry.cardId === null ? null : this.parseWholeNumber(entry.cardId),
         name: String(entry.name),
         habitat: this.toHabitat(entry.habitat),
-        inHand: !!entry.inHand,
+        inHand: entry.inHand === undefined ? defaultInHand : !!entry.inHand,
+        planned: entry.planned === undefined ? true : !!entry.planned,
       }))
   }
 
@@ -798,6 +858,7 @@ export class GameHelperComponent implements OnDestroy {
   }
 
   private refreshEntryNames(): void {
+    this.handBirds = this.handBirds.map(entry => this.refreshEntryName(entry))
     this.plannedBirds = this.plannedBirds.map(entry => this.refreshEntryName(entry))
     this.playedBirds = this.playedBirds.map(entry => this.refreshEntryName(entry))
   }
@@ -826,19 +887,43 @@ export class GameHelperComponent implements OnDestroy {
   }
 
   private entriesByType(type: EntryListType): HelperBirdEntry[] {
+    if (type === 'hand') {
+      return this.handBirds
+    }
+
     return type === 'planned' ? this.plannedBirds : this.playedBirds
   }
 
   private setEntriesByType(type: EntryListType, entries: HelperBirdEntry[]): void {
-    if (type === 'planned') {
+    if (type === 'hand') {
+      this.handBirds = entries
+    } else if (type === 'planned') {
       this.plannedBirds = entries
     } else {
       this.playedBirds = entries
     }
   }
 
-  private scoredBirds(): GameHelperScoredBird[] {
-    return [...this.playedBirds, ...this.plannedBirds].reduce((acc, entry) => {
+  private plannedToPlayBirds(): HelperBirdEntry[] {
+    return [
+      ...this.handBirds.filter(entry => entry.planned),
+      ...this.plannedBirds,
+    ]
+  }
+
+  private scoredBirdsForValue(targetEntry: HelperBirdEntry): GameHelperScoredBird[] {
+    const plannedEntries = this.plannedToPlayBirds()
+    const targetIsIncluded = this.playedBirds.some(entry => entry.id === targetEntry.id)
+      || plannedEntries.some(entry => entry.id === targetEntry.id)
+    const entries = targetIsIncluded
+      ? [...this.playedBirds, ...plannedEntries]
+      : [...this.playedBirds, ...plannedEntries, targetEntry]
+
+    return this.scoredBirds(entries)
+  }
+
+  private scoredBirds(entries: HelperBirdEntry[]): GameHelperScoredBird[] {
+    return entries.reduce((acc, entry) => {
       if (entry.cardId === null) {
         return acc
       }
@@ -855,6 +940,10 @@ export class GameHelperComponent implements OnDestroy {
 
       return acc
     }, [] as GameHelperScoredBird[])
+  }
+
+  private translateText(value: string): string {
+    return this.translate.transform(value)
   }
 
   private isPlayerBonusCard(card: BonusCard): boolean {

@@ -48,6 +48,24 @@ h3 {
     margin: 0 0 8px;
 }
 
+h4 {
+    color: #555555;
+    font-size: 18px;
+    line-height: 22px;
+    margin: 16px 0 0;
+}
+
+.subsection-header {
+    align-items: baseline;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 12px;
+}
+
+.subsection-header .progress-note {
+    margin-top: 16px;
+}
+
 .field-row,
 .bird-editor,
 .bonus-editor,
@@ -201,6 +219,15 @@ h3 {
     display: flex;
     flex-direction: column;
     min-width: 0;
+}
+
+.entry-plan-toggle {
+    align-items: center;
+    color: #555555;
+    display: inline-flex;
+    font-size: 13px;
+    gap: 5px;
+    margin-top: 2px;
 }
 
 .entry-side {

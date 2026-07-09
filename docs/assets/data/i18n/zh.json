@@ -10693,6 +10693,285 @@
     },
     "British Birds": {
       "Translated": "英国鸟类"
+    },
+    "Game helper": {
+      "Translated": "游戏助手"
+    },
+    "planned": {
+      "Translated": "已计划"
+    },
+    "turns left": {
+      "Translated": "剩余回合"
+    },
+    "Game progress": {
+      "Translated": "游戏进度"
+    },
+    "Current round": {
+      "Translated": "当前轮次"
+    },
+    "Turns left this round": {
+      "Translated": "本轮剩余回合"
+    },
+    "Total": {
+      "Translated": "合计"
+    },
+    "through round 4": {
+      "Translated": "至第 4 轮"
+    },
+    "Includes": {
+      "Translated": "包含"
+    },
+    "turns from later rounds.": {
+      "Translated": "个后续轮次回合。"
+    },
+    "Current food supply": {
+      "Translated": "当前食物库存"
+    },
+    "Forest": {
+      "Translated": "森林"
+    },
+    "Grassland": {
+      "Translated": "草原"
+    },
+    "Wetland": {
+      "Translated": "湿地"
+    },
+    "Invertebrate": {
+      "Translated": "无脊椎"
+    },
+    "Seed": {
+      "Translated": "种子"
+    },
+    "Fruit": {
+      "Translated": "水果"
+    },
+    "Fish": {
+      "Translated": "鱼"
+    },
+    "Rodent": {
+      "Translated": "啮齿"
+    },
+    "Nectar": {
+      "Translated": "花蜜"
+    },
+    "food available.": {
+      "Translated": "个食物可用。"
+    },
+    "Food estimates subtract this supply before using the current Forest action rate.": {
+      "Translated": "食物估算会先扣除这些库存，再按当前森林行动产出计算。"
+    },
+    "Planned action turns": {
+      "Translated": "计划行动回合"
+    },
+    "Gain food turns": {
+      "Translated": "获取食物回合"
+    },
+    "Auto": {
+      "Translated": "自动"
+    },
+    "turns for": {
+      "Translated": "回合用于"
+    },
+    "of": {
+      "Translated": "/"
+    },
+    "food at": {
+      "Translated": "个食物，以"
+    },
+    "/turn": {
+      "Translated": "/回合"
+    },
+    "Lay eggs turns": {
+      "Translated": "产蛋回合"
+    },
+    "eggs": {
+      "Translated": "个蛋"
+    },
+    "Draw cards turns": {
+      "Translated": "抽牌回合"
+    },
+    "useful cards": {
+      "Translated": "张有用的牌"
+    },
+    "Bonus cards": {
+      "Translated": "奖励卡"
+    },
+    "Bonus card": {
+      "Translated": "奖励卡"
+    },
+    "Values use played birds, checked hand plans, and undrawn planned birds.": {
+      "Translated": "价值会使用已打出的鸟、已勾选计划的手牌和尚未抽取的计划鸟。"
+    },
+    "Remove bonus card": {
+      "Translated": "移除奖励卡"
+    },
+    "Add your bonus cards to include them in bird values.": {
+      "Translated": "添加你的奖励卡，以计入鸟牌价值。"
+    },
+    "Not counted in bird values yet": {
+      "Translated": "尚未计入鸟牌价值"
+    },
+    "Hand and draw plan": {
+      "Translated": "手牌与抽牌计划"
+    },
+    "Player hand": {
+      "Translated": "玩家手牌"
+    },
+    "Check hand cards only when you plan to play them.": {
+      "Translated": "只有准备打出的手牌才需要勾选。"
+    },
+    "Bird card": {
+      "Translated": "鸟卡"
+    },
+    "Choose a card in your hand": {
+      "Translated": "选择一张手牌"
+    },
+    "Row": {
+      "Translated": "栖息地"
+    },
+    "Add hand card": {
+      "Translated": "添加手牌"
+    },
+    "Planned": {
+      "Translated": "计划打出"
+    },
+    "planned to play": {
+      "Translated": "已计划打出"
+    },
+    "not planned": {
+      "Translated": "未计划"
+    },
+    "food": {
+      "Translated": "食物"
+    },
+    "Value": {
+      "Translated": "价值"
+    },
+    "base": {
+      "Translated": "基础"
+    },
+    "bonus": {
+      "Translated": "奖励"
+    },
+    "Move hand bird left": {
+      "Translated": "左移手牌鸟"
+    },
+    "Move hand bird right": {
+      "Translated": "右移手牌鸟"
+    },
+    "Remove hand bird": {
+      "Translated": "移除手牌鸟"
+    },
+    "No hand birds in this row.": {
+      "Translated": "这一行没有手牌鸟。"
+    },
+    "Add hand cards to compare value, then check the cards you plan to play.": {
+      "Translated": "添加手牌来比较价值，然后勾选你计划打出的牌。"
+    },
+    "Undrawn planned birds": {
+      "Translated": "尚未抽取的计划鸟"
+    },
+    "Choose a card, or leave blank for an unknown draw": {
+      "Translated": "选择一张牌，或留空表示未知抽牌"
+    },
+    "Add draw plan": {
+      "Translated": "添加抽牌计划"
+    },
+    "draw needed": {
+      "Translated": "需要抽到"
+    },
+    "Move planned bird left": {
+      "Translated": "左移计划鸟"
+    },
+    "Move planned bird right": {
+      "Translated": "右移计划鸟"
+    },
+    "Remove planned bird": {
+      "Translated": "移除计划鸟"
+    },
+    "No undrawn planned birds in this row.": {
+      "Translated": "这一行没有尚未抽取的计划鸟。"
+    },
+    "Add cards you still need to draw before playing.": {
+      "Translated": "添加仍需先抽到再打出的牌。"
+    },
+    "Birds already played": {
+      "Translated": "已打出的鸟"
+    },
+    "Rows affect action estimates and row-based bonus values": {
+      "Translated": "栖息地会影响行动估算和基于行的奖励价值"
+    },
+    "Add played": {
+      "Translated": "添加已打出"
+    },
+    "Move played bird left": {
+      "Translated": "左移已打出的鸟"
+    },
+    "Move played bird right": {
+      "Translated": "右移已打出的鸟"
+    },
+    "Remove played bird": {
+      "Translated": "移除已打出的鸟"
+    },
+    "No played birds in this row.": {
+      "Translated": "这一行没有已打出的鸟。"
+    },
+    "Add current board birds to estimate row action gains and egg costs.": {
+      "Translated": "添加当前版图上的鸟，用于估算各行行动收益和蛋成本。"
+    },
+    "Estimated plan": {
+      "Translated": "计划估算"
+    },
+    "play bird turns": {
+      "Translated": "打鸟回合"
+    },
+    "food turns": {
+      "Translated": "食物回合"
+    },
+    "food missing": {
+      "Translated": "个食物缺口"
+    },
+    "egg turns": {
+      "Translated": "产蛋回合"
+    },
+    "draw turns": {
+      "Translated": "抽牌回合"
+    },
+    "total planned turns": {
+      "Translated": "计划总回合"
+    },
+    "turns still free": {
+      "Translated": "个回合可用"
+    },
+    "turns over limit": {
+      "Translated": "个回合超出"
+    },
+    "Row limit warning": {
+      "Translated": "行上限警告"
+    },
+    "has more than 5 birds in this plan.": {
+      "Translated": "在该计划中超过 5 只鸟。"
+    },
+    "Base value": {
+      "Translated": "基础价值"
+    },
+    "Bonus value": {
+      "Translated": "奖励价值"
+    },
+    "Not counted": {
+      "Translated": "未计入"
+    },
+    "Bird value": {
+      "Translated": "鸟牌价值"
+    },
+    "Hand bird": {
+      "Translated": "手牌鸟"
+    },
+    "Undrawn bird": {
+      "Translated": "未知待抽鸟"
+    },
+    "Played bird": {
+      "Translated": "已打出的鸟"
     }
   },
   "parameters": {
