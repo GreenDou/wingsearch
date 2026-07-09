@@ -51,6 +51,7 @@ h3 {
 .field-row,
 .bird-editor,
 .bonus-editor,
+.food-supply-grid,
 .turn-grid {
     display: flex;
     flex-wrap: wrap;
@@ -86,6 +87,25 @@ h3 {
 .bonus-chip-list {
     display: block;
     margin-top: 10px;
+}
+
+.food-supply-grid {
+    gap: 8px 12px;
+}
+
+.food-supply-field {
+    flex: 1 1 130px;
+}
+
+.food-prefix {
+    align-items: center;
+    display: inline-flex;
+    margin-right: 6px;
+}
+
+.food-prefix img {
+    height: 20px;
+    width: 20px;
 }
 
 .habitat-field {

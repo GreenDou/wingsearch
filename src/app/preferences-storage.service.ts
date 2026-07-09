@@ -68,12 +68,22 @@ export interface GameHelperBirdPreference {
   inHand: boolean
 }
 
+export interface GameHelperFoodPreference {
+  invertebrate: number
+  seed: number
+  fruit: number
+  fish: number
+  rodent: number
+  nectar: number
+}
+
 export interface GameHelperPreference {
   currentRound: number
   cubesLeft: number
   planHabitat: string
   playedHabitat: string
   planInHand: boolean
+  foodSupply: GameHelperFoodPreference
   selectedBonusCardIds: number[]
   plannedBirds: GameHelperBirdPreference[]
   playedBirds: GameHelperBirdPreference[]

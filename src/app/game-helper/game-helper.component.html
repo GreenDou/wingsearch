@@ -29,6 +29,24 @@
             </p>
         </section>
 
+        <section class="helper-section wide">
+            <h3>Current food supply</h3>
+            <div class="food-supply-grid">
+                <mat-form-field appearance="standard" class="food-supply-field" *ngFor="let food of foods">
+                    <mat-label>{{food.display}}</mat-label>
+                    <span matPrefix class="food-prefix">
+                        <img src="assets/icons/png/{{food.icon}}.png" alt="" aria-hidden="true">
+                    </span>
+                    <input matInput type="number" min="0" [ngModel]="foodSupply[food.value]"
+                        (ngModelChange)="setFoodSupply(food.value, $event)">
+                </mat-form-field>
+            </div>
+            <p class="progress-note">
+                {{foodSupplyTotal()}} food available. Food estimates subtract this supply before using the current
+                Forest action rate.
+            </p>
+        </section>
+
         <section class="helper-section">
             <h3>Planned action turns</h3>
             <div class="turn-grid">
@@ -37,7 +55,7 @@
                         <mat-label>Gain food turns</mat-label>
                         <input matInput type="number" min="0" [ngModel]="turnInputValue('food')"
                             (ngModelChange)="setManualTurns('food', $event)">
-                        <mat-hint>Auto: {{estimate().foodTurns}} turns for {{estimate().foodNeeded}} food</mat-hint>
+                        <mat-hint>Auto: {{estimate().foodTurns}} turns for {{estimate().foodMissing}} of {{estimate().foodNeeded}} food at {{estimate().foodPerTurn}}/turn</mat-hint>
                     </mat-form-field>
                     <button mat-button color="primary" type="button" [disabled]="turnIsAutomatic('food')"
                         (click)="resetManualTurns('food')">Auto</button>
@@ -185,7 +203,7 @@
                 <mat-form-field appearance="standard" class="bird-field">
                     <mat-label>Bird card</mat-label>
                     <input matInput type="text" [formControl]="playedCardControl" [matAutocomplete]="playedAuto">
-                    <mat-hint>Rows affect egg estimates and row-based bonus values</mat-hint>
+                    <mat-hint>Rows affect action estimates and row-based bonus values</mat-hint>
                 </mat-form-field>
                 <mat-autocomplete #playedAuto="matAutocomplete" [displayWith]="displayBird"
                     (optionSelected)="selectPlayedBird($event)">
@@ -252,7 +270,7 @@
                 </div>
             </div>
             <ng-template #noPlayedBirds>
-                <p class="empty-state">Add current board birds to estimate egg costs.</p>
+                <p class="empty-state">Add current board birds to estimate row action gains and egg costs.</p>
             </ng-template>
         </section>
 
@@ -265,7 +283,7 @@
                 </div>
                 <div>
                     <strong>{{turnInputValue('food')}}</strong>
-                    <span>food turns</span>
+                    <span>food turns · {{estimate().foodMissing}} food missing</span>
                 </div>
                 <div>
                     <strong>{{turnInputValue('eggs')}}</strong>
