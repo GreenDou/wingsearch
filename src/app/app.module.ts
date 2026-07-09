@@ -50,6 +50,7 @@ import { AnalyticsEventDirective } from './analytics-event.directive';
 import { ApplinkDirective } from './applink.directive';
 import { FitTextDirective} from './fittext.directive'
 import { SafePipe } from './safe.pipe'
+import { GameHelperComponent } from './game-helper/game-helper.component'
 
 @NgModule({
   declarations: [
@@ -74,6 +75,7 @@ import { SafePipe } from './safe.pipe'
     ApplinkDirective,
     FitTextDirective,
     SafePipe,
+    GameHelperComponent,
   ],
   imports: [
     BrowserModule,

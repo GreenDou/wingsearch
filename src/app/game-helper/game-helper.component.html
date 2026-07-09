@@ -1,0 +1,198 @@
+<mat-expansion-panel class="game-helper-panel">
+    <mat-expansion-panel-header collapsedHeight="64px" expandedHeight="64px">
+        <mat-panel-title>
+            <span>Game helper</span>
+            <span class="turn-summary" [ngClass]="{warning: turnBalance() < 0}">
+                {{totalPlannedTurns()}} planned / {{cubesLeft || 0}} turns left
+            </span>
+        </mat-panel-title>
+    </mat-expansion-panel-header>
+
+    <div class="helper-grid">
+        <section class="helper-section">
+            <h3>Game progress</h3>
+            <div class="field-row">
+                <mat-form-field appearance="standard">
+                    <mat-label>Current round</mat-label>
+                    <input matInput type="number" min="1" max="4" [(ngModel)]="currentRound">
+                </mat-form-field>
+                <mat-form-field appearance="standard">
+                    <mat-label>Turns left this round</mat-label>
+                    <input matInput type="number" min="0" [(ngModel)]="cubesLeft">
+                </mat-form-field>
+            </div>
+        </section>
+
+        <section class="helper-section">
+            <h3>Planned action turns</h3>
+            <div class="turn-grid">
+                <div class="turn-input">
+                    <mat-form-field appearance="standard">
+                        <mat-label>Gain food turns</mat-label>
+                        <input matInput type="number" min="0" [ngModel]="turnInputValue('food')"
+                            (ngModelChange)="setManualTurns('food', $event)">
+                        <mat-hint>Auto: {{estimate().foodTurns}} turns for {{estimate().foodNeeded}} food</mat-hint>
+                    </mat-form-field>
+                    <button mat-button color="primary" type="button" [disabled]="turnIsAutomatic('food')"
+                        (click)="resetManualTurns('food')">Auto</button>
+                </div>
+                <div class="turn-input">
+                    <mat-form-field appearance="standard">
+                        <mat-label>Lay eggs turns</mat-label>
+                        <input matInput type="number" min="0" [ngModel]="turnInputValue('eggs')"
+                            (ngModelChange)="setManualTurns('eggs', $event)">
+                        <mat-hint>Auto: {{estimate().eggTurns}} turns for {{estimate().eggsNeeded}} eggs</mat-hint>
+                    </mat-form-field>
+                    <button mat-button color="primary" type="button" [disabled]="turnIsAutomatic('eggs')"
+                        (click)="resetManualTurns('eggs')">Auto</button>
+                </div>
+                <div class="turn-input">
+                    <mat-form-field appearance="standard">
+                        <mat-label>Draw cards turns</mat-label>
+                        <input matInput type="number" min="0" [ngModel]="turnInputValue('cards')"
+                            (ngModelChange)="setManualTurns('cards', $event)">
+                        <mat-hint>Auto: {{estimate().drawTurns}} useful cards</mat-hint>
+                    </mat-form-field>
+                    <button mat-button color="primary" type="button" [disabled]="turnIsAutomatic('cards')"
+                        (click)="resetManualTurns('cards')">Auto</button>
+                </div>
+            </div>
+        </section>
+
+        <section class="helper-section wide">
+            <h3>Plan birds to play</h3>
+            <div class="bird-editor">
+                <mat-form-field appearance="standard" class="bird-field">
+                    <mat-label>Bird card</mat-label>
+                    <input matInput type="text" [formControl]="planCardControl" [matAutocomplete]="planAuto">
+                    <mat-hint>Choose a card, or leave blank for an undrawn card</mat-hint>
+                </mat-form-field>
+                <mat-autocomplete #planAuto="matAutocomplete" [displayWith]="displayBird"
+                    (optionSelected)="selectPlanBird($event)">
+                    <mat-option *ngFor="let card of filteredPlanBirdCards" [value]="card">
+                        {{card['Common name']}}
+                    </mat-option>
+                </mat-autocomplete>
+
+                <mat-form-field appearance="standard" class="habitat-field">
+                    <mat-label>Row</mat-label>
+                    <mat-select [(ngModel)]="planHabitat">
+                        <mat-option *ngFor="let habitat of habitats" [value]="habitat.value">
+                            <span class="habitat-option">
+                                <img src="assets/icons/png/{{habitat.icon}}.png" alt="" aria-hidden="true">
+                                {{habitat.display}}
+                            </span>
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <label class="checkbox-field">
+                    <input type="checkbox" [(ngModel)]="planInHand">
+                    In hand
+                </label>
+
+                <button mat-raised-button color="primary" type="button" (click)="addPlannedBird()">
+                    Add plan
+                </button>
+            </div>
+
+            <div class="entry-list" *ngIf="plannedBirds.length; else noPlannedBirds">
+                <div class="entry-row" *ngFor="let bird of plannedBirds; trackBy: trackEntry">
+                    <div>
+                        <strong>{{bird.name}}</strong>
+                        <span>{{habitatLabel(bird.habitat)}} · {{bird.inHand ? 'in hand' : 'draw needed'}} · {{foodCostFor(bird)}} food</span>
+                    </div>
+                    <button mat-icon-button type="button" aria-label="Remove planned bird"
+                        (click)="removePlannedBird(bird.id)">
+                        <mat-icon>close</mat-icon>
+                    </button>
+                </div>
+            </div>
+            <ng-template #noPlannedBirds>
+                <p class="empty-state">Add birds you want to play this round.</p>
+            </ng-template>
+        </section>
+
+        <section class="helper-section wide">
+            <h3>Birds already played</h3>
+            <div class="bird-editor">
+                <mat-form-field appearance="standard" class="bird-field">
+                    <mat-label>Bird card</mat-label>
+                    <input matInput type="text" [formControl]="playedCardControl" [matAutocomplete]="playedAuto">
+                    <mat-hint>Only the row count affects egg estimates</mat-hint>
+                </mat-form-field>
+                <mat-autocomplete #playedAuto="matAutocomplete" [displayWith]="displayBird"
+                    (optionSelected)="selectPlayedBird($event)">
+                    <mat-option *ngFor="let card of filteredPlayedBirdCards" [value]="card">
+                        {{card['Common name']}}
+                    </mat-option>
+                </mat-autocomplete>
+
+                <mat-form-field appearance="standard" class="habitat-field">
+                    <mat-label>Row</mat-label>
+                    <mat-select [(ngModel)]="playedHabitat">
+                        <mat-option *ngFor="let habitat of habitats" [value]="habitat.value">
+                            <span class="habitat-option">
+                                <img src="assets/icons/png/{{habitat.icon}}.png" alt="" aria-hidden="true">
+                                {{habitat.display}}
+                            </span>
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+
+                <button mat-raised-button color="primary" type="button" (click)="addPlayedBird()">
+                    Add played
+                </button>
+            </div>
+
+            <div class="entry-list compact" *ngIf="playedBirds.length; else noPlayedBirds">
+                <div class="entry-row" *ngFor="let bird of playedBirds; trackBy: trackEntry">
+                    <div>
+                        <strong>{{bird.name}}</strong>
+                        <span>{{habitatLabel(bird.habitat)}}</span>
+                    </div>
+                    <button mat-icon-button type="button" aria-label="Remove played bird"
+                        (click)="removePlayedBird(bird.id)">
+                        <mat-icon>close</mat-icon>
+                    </button>
+                </div>
+            </div>
+            <ng-template #noPlayedBirds>
+                <p class="empty-state">Add current board birds to estimate egg costs.</p>
+            </ng-template>
+        </section>
+
+        <section class="helper-section wide estimate-section" [ngClass]="{warning: turnBalance() < 0}">
+            <h3>Estimated plan</h3>
+            <div class="estimate-grid">
+                <div>
+                    <strong>{{estimate().playTurns}}</strong>
+                    <span>play bird turns</span>
+                </div>
+                <div>
+                    <strong>{{turnInputValue('food')}}</strong>
+                    <span>food turns</span>
+                </div>
+                <div>
+                    <strong>{{turnInputValue('eggs')}}</strong>
+                    <span>egg turns</span>
+                </div>
+                <div>
+                    <strong>{{turnInputValue('cards')}}</strong>
+                    <span>draw turns</span>
+                </div>
+                <div>
+                    <strong>{{totalPlannedTurns()}}</strong>
+                    <span>total planned turns</span>
+                </div>
+                <div>
+                    <strong>{{turnBalance()}}</strong>
+                    <span>{{turnBalance() >= 0 ? 'turns still free' : 'turns over limit'}}</span>
+                </div>
+            </div>
+            <p *ngIf="estimate().overfilledRows.length" class="warning-text">
+                Row limit warning: {{overfilledRowLabels()}} has more than 5 birds in this plan.
+            </p>
+        </section>
+    </div>
+</mat-expansion-panel>
