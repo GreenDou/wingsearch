@@ -141,12 +141,14 @@ h3 {
 }
 
 .entry-row span,
-.empty-state {
+.empty-state,
+.progress-note {
     color: #666666;
     font-size: 13px;
 }
 
-.empty-state {
+.empty-state,
+.progress-note {
     margin: 8px 0 0;
 }
 

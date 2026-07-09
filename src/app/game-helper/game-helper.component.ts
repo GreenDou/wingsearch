@@ -41,6 +41,7 @@ interface HelperEstimate {
   styleUrls: ['./game-helper.component.scss']
 })
 export class GameHelperComponent implements OnDestroy {
+  readonly turnsPerRound = [8, 7, 6, 5]
   readonly habitats: HabitatOption[] = [
     { value: 'forest', display: 'Forest', icon: 'forest' },
     { value: 'grassland', display: 'Grassland', icon: 'grassland' },
@@ -173,7 +174,7 @@ export class GameHelperComponent implements OnDestroy {
   }
 
   setCurrentRound(value: string | number): void {
-    this.currentRound = this.parseWholeNumber(value) || 1
+    this.currentRound = this.toRound(this.parseWholeNumber(value))
     this.savePreferences()
   }
 
@@ -228,8 +229,19 @@ export class GameHelperComponent implements OnDestroy {
       + this.turnInputValue('cards')
   }
 
+  totalTurnsLeft(): number {
+    return this.cubesLeft + this.futureRoundTurns()
+  }
+
+  futureRoundTurns(): number {
+    const currentRoundIndex = this.currentRound - 1
+    return this.turnsPerRound
+      .slice(currentRoundIndex + 1)
+      .reduce((sum, turns) => sum + turns, 0)
+  }
+
   turnBalance(): number {
-    return this.cubesLeft - this.totalPlannedTurns()
+    return this.totalTurnsLeft() - this.totalPlannedTurns()
   }
 
   estimate(): HelperEstimate {
@@ -370,10 +382,18 @@ export class GameHelperComponent implements OnDestroy {
     return Math.max(0, Math.floor(parsedValue))
   }
 
+  private toRound(round: number | null): number {
+    if (round === null) {
+      return 1
+    }
+
+    return Math.min(this.turnsPerRound.length, Math.max(1, round))
+  }
+
   private restorePreferences(): void {
     const preferences = this.preferences.getGameHelper(this.currentPreferences())
 
-    this.currentRound = this.parseWholeNumber(preferences.currentRound) || 1
+    this.currentRound = this.toRound(this.parseWholeNumber(preferences.currentRound))
     this.cubesLeft = this.parseWholeNumber(preferences.cubesLeft) || 0
     this.planHabitat = this.toHabitat(preferences.planHabitat)
     this.playedHabitat = this.toHabitat(preferences.playedHabitat)

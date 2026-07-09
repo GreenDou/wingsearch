@@ -3,7 +3,7 @@
         <mat-panel-title>
             <span>Game helper</span>
             <span class="turn-summary" [ngClass]="{warning: turnBalance() < 0}">
-                {{totalPlannedTurns()}} planned / {{cubesLeft || 0}} turns left
+                {{totalPlannedTurns()}} planned / {{totalTurnsLeft()}} turns left
             </span>
         </mat-panel-title>
     </mat-expansion-panel-header>
@@ -21,8 +21,12 @@
                     <mat-label>Turns left this round</mat-label>
                     <input matInput type="number" min="0" [ngModel]="cubesLeft"
                         (ngModelChange)="setCubesLeft($event)">
+                    <mat-hint>Total: {{totalTurnsLeft()}} through round 4</mat-hint>
                 </mat-form-field>
             </div>
+            <p class="progress-note" *ngIf="futureRoundTurns() > 0">
+                Includes {{futureRoundTurns()}} turns from later rounds.
+            </p>
         </section>
 
         <section class="helper-section">
@@ -111,7 +115,7 @@
                 </div>
             </div>
             <ng-template #noPlannedBirds>
-                <p class="empty-state">Add birds you want to play this round.</p>
+                <p class="empty-state">Add birds you want to play.</p>
             </ng-template>
         </section>
 
