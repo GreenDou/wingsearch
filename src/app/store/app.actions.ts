@@ -67,7 +67,7 @@ export const search = createAction('[App] Search', props<{
 
 export const bonusCardSearch = createAction('[App] Bonus Card Search',
     props<{
-        bonus: string[], bonusfield: string, expansion: Expansion
+        bonus: number[], bonusfield: string, expansion: Expansion
     }>()
 )
 

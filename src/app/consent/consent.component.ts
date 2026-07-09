@@ -1,6 +1,8 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core'
 import { AnalyticsService } from '../analytics.service'
 import { CookiesService } from '../cookies.service'
+import { preferredLanguage } from '../languages'
+import { PreferencesStorageService } from '../preferences-storage.service'
 
 @Component({
   selector: 'app-consent',
@@ -11,7 +13,11 @@ export class ConsentComponent implements OnInit {
   @Output()
   consentChange = new EventEmitter<string>()
 
-  constructor(private cookies: CookiesService, private analytics: AnalyticsService) { }
+  constructor(
+    private cookies: CookiesService,
+    private analytics: AnalyticsService,
+    private preferences: PreferencesStorageService
+  ) { }
 
   ngOnInit(): void {
   }
@@ -21,6 +27,6 @@ export class ConsentComponent implements OnInit {
     this.consentChange.emit(value)
 
     if (value === '1')
-      this.analytics.setLanguage(this.cookies.getCookie('language') || 'en')
+      this.analytics.setLanguage(preferredLanguage(this.preferences.getLanguage()))
   }
 }

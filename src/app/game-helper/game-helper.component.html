@@ -14,11 +14,13 @@
             <div class="field-row">
                 <mat-form-field appearance="standard">
                     <mat-label>Current round</mat-label>
-                    <input matInput type="number" min="1" max="4" [(ngModel)]="currentRound">
+                    <input matInput type="number" min="1" max="4" [ngModel]="currentRound"
+                        (ngModelChange)="setCurrentRound($event)">
                 </mat-form-field>
                 <mat-form-field appearance="standard">
                     <mat-label>Turns left this round</mat-label>
-                    <input matInput type="number" min="0" [(ngModel)]="cubesLeft">
+                    <input matInput type="number" min="0" [ngModel]="cubesLeft"
+                        (ngModelChange)="setCubesLeft($event)">
                 </mat-form-field>
             </div>
         </section>
@@ -76,7 +78,7 @@
 
                 <mat-form-field appearance="standard" class="habitat-field">
                     <mat-label>Row</mat-label>
-                    <mat-select [(ngModel)]="planHabitat">
+                    <mat-select [ngModel]="planHabitat" (ngModelChange)="setPlanHabitat($event)">
                         <mat-option *ngFor="let habitat of habitats" [value]="habitat.value">
                             <span class="habitat-option">
                                 <img src="assets/icons/png/{{habitat.icon}}.png" alt="" aria-hidden="true">
@@ -87,7 +89,7 @@
                 </mat-form-field>
 
                 <label class="checkbox-field">
-                    <input type="checkbox" [(ngModel)]="planInHand">
+                    <input type="checkbox" [ngModel]="planInHand" (ngModelChange)="setPlanInHand($event)">
                     In hand
                 </label>
 
@@ -130,7 +132,7 @@
 
                 <mat-form-field appearance="standard" class="habitat-field">
                     <mat-label>Row</mat-label>
-                    <mat-select [(ngModel)]="playedHabitat">
+                    <mat-select [ngModel]="playedHabitat" (ngModelChange)="setPlayedHabitat($event)">
                         <mat-option *ngFor="let habitat of habitats" [value]="habitat.value">
                             <span class="habitat-option">
                                 <img src="assets/icons/png/{{habitat.icon}}.png" alt="" aria-hidden="true">

@@ -3,6 +3,7 @@ import { FormControl } from '@angular/forms'
 import { MatAutocompleteSelectedEvent } from '@angular/material/autocomplete'
 import { Store } from '@ngrx/store'
 import { Subscription } from 'rxjs'
+import { GameHelperBirdPreference, GameHelperPreference, PreferencesStorageService } from '../preferences-storage.service'
 import { AppState, BirdCard } from '../store/app.interfaces'
 
 type Habitat = 'forest' | 'grassland' | 'wetland'
@@ -78,10 +79,16 @@ export class GameHelperComponent implements OnDestroy {
   private nextEntryId = 1
   private subscription = new Subscription()
 
-  constructor(private store: Store<{ app: AppState }>) {
+  constructor(
+    private store: Store<{ app: AppState }>,
+    private preferences: PreferencesStorageService
+  ) {
+    this.restorePreferences()
+
     this.subscription.add(
       this.store.select(({ app }) => app.birdCards).subscribe(cards => {
         this.birdCards = [...cards].sort((a, b) => this.birdName(a).localeCompare(this.birdName(b)))
+        this.refreshEntryNames()
         this.updatePlanOptions()
         this.updatePlayedOptions()
       })
@@ -106,6 +113,7 @@ export class GameHelperComponent implements OnDestroy {
     this.plannedBirds = [...this.plannedBirds, entry]
     this.planCardControl.setValue('')
     this.planInHand = true
+    this.savePreferences()
   }
 
   addPlayedBird(): void {
@@ -117,14 +125,17 @@ export class GameHelperComponent implements OnDestroy {
 
     this.playedBirds = [...this.playedBirds, entry]
     this.playedCardControl.setValue('')
+    this.savePreferences()
   }
 
   removePlannedBird(id: number): void {
     this.plannedBirds = this.plannedBirds.filter(bird => bird.id !== id)
+    this.savePreferences()
   }
 
   removePlayedBird(id: number): void {
     this.playedBirds = this.playedBirds.filter(bird => bird.id !== id)
+    this.savePreferences()
   }
 
   selectPlanBird(event: MatAutocompleteSelectedEvent): void {
@@ -145,6 +156,8 @@ export class GameHelperComponent implements OnDestroy {
     } else {
       this.manualCardTurns = parsedValue
     }
+
+    this.savePreferences()
   }
 
   resetManualTurns(type: TurnType): void {
@@ -155,6 +168,37 @@ export class GameHelperComponent implements OnDestroy {
     } else {
       this.manualCardTurns = null
     }
+
+    this.savePreferences()
+  }
+
+  setCurrentRound(value: string | number): void {
+    this.currentRound = this.parseWholeNumber(value) || 1
+    this.savePreferences()
+  }
+
+  setCubesLeft(value: string | number): void {
+    this.cubesLeft = this.parseWholeNumber(value) || 0
+    this.savePreferences()
+  }
+
+  setPlanHabitat(habitat: Habitat): void {
+    this.planHabitat = this.toHabitat(habitat)
+    this.savePreferences()
+  }
+
+  setPlayedHabitat(habitat: Habitat): void {
+    this.playedHabitat = this.toHabitat(habitat)
+    this.savePreferences()
+  }
+
+  setPlanInHand(inHand: boolean): void {
+    this.planInHand = inHand
+    this.savePreferences()
+  }
+
+  savePreferences(): void {
+    this.preferences.saveGameHelper(this.currentPreferences())
   }
 
   turnInputValue(type: TurnType): number {
@@ -324,5 +368,74 @@ export class GameHelperComponent implements OnDestroy {
     }
 
     return Math.max(0, Math.floor(parsedValue))
+  }
+
+  private restorePreferences(): void {
+    const preferences = this.preferences.getGameHelper(this.currentPreferences())
+
+    this.currentRound = this.parseWholeNumber(preferences.currentRound) || 1
+    this.cubesLeft = this.parseWholeNumber(preferences.cubesLeft) || 0
+    this.planHabitat = this.toHabitat(preferences.planHabitat)
+    this.playedHabitat = this.toHabitat(preferences.playedHabitat)
+    this.planInHand = preferences.planInHand
+    this.plannedBirds = this.restoreEntries(preferences.plannedBirds)
+    this.playedBirds = this.restoreEntries(preferences.playedBirds)
+    this.manualFoodTurns = this.parseManualTurns(preferences.manualFoodTurns)
+    this.manualEggTurns = this.parseManualTurns(preferences.manualEggTurns)
+    this.manualCardTurns = this.parseManualTurns(preferences.manualCardTurns)
+    this.nextEntryId = Math.max(
+      0,
+      ...this.plannedBirds.map(bird => bird.id),
+      ...this.playedBirds.map(bird => bird.id)
+    ) + 1
+  }
+
+  private currentPreferences(): GameHelperPreference {
+    return {
+      currentRound: this.currentRound,
+      cubesLeft: this.cubesLeft,
+      planHabitat: this.planHabitat,
+      playedHabitat: this.playedHabitat,
+      planInHand: this.planInHand,
+      plannedBirds: this.plannedBirds,
+      playedBirds: this.playedBirds,
+      manualFoodTurns: this.manualFoodTurns,
+      manualEggTurns: this.manualEggTurns,
+      manualCardTurns: this.manualCardTurns,
+    }
+  }
+
+  private restoreEntries(entries: GameHelperBirdPreference[]): HelperBirdEntry[] {
+    return entries
+      .filter(entry => entry && entry.name)
+      .map(entry => ({
+        id: this.parseWholeNumber(entry.id) || this.nextEntryId++,
+        cardId: entry.cardId === null ? null : this.parseWholeNumber(entry.cardId),
+        name: String(entry.name),
+        habitat: this.toHabitat(entry.habitat),
+        inHand: !!entry.inHand,
+      }))
+  }
+
+  private refreshEntryNames(): void {
+    this.plannedBirds = this.plannedBirds.map(entry => this.refreshEntryName(entry))
+    this.playedBirds = this.playedBirds.map(entry => this.refreshEntryName(entry))
+  }
+
+  private refreshEntryName(entry: HelperBirdEntry): HelperBirdEntry {
+    if (entry.cardId === null) {
+      return entry
+    }
+
+    const card = this.findCard(entry.cardId)
+    return card ? { ...entry, name: this.birdName(card) } : entry
+  }
+
+  private toHabitat(habitat: string): Habitat {
+    return this.habitats.some(option => option.value === habitat) ? habitat as Habitat : 'forest'
+  }
+
+  private parseManualTurns(value: number | null): number | null {
+    return value === null ? null : this.parseWholeNumber(value)
   }
 }

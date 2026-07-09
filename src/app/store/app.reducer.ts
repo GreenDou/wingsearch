@@ -21,7 +21,7 @@ import HummingbirdCards from '../../assets/data/hummingbirds.json'
 import Parameters from '../../assets/data/parameters.json'
 import { birdCardsSearch, bonusCardsSearch } from './cards-search'
 import { bonusSearchMap, dynamicPercentage } from './bonus-search-map'
-import { CookiesService } from '../cookies.service'
+import { PreferencesStorageService } from '../preferences-storage.service'
 
 const SLICE_WINDOW = 18
 
@@ -94,7 +94,22 @@ const sortDisplayedCards = (cards: (BirdCard | BonusCard)[], sort: CardSort): (B
         .map(({ card }) => card)
 }
 
-const cookies: CookiesService = new CookiesService();
+const defaultExpansion = {
+    core: true,
+    european: true,
+    oceania: true,
+    asia: true,
+    americas: true,
+}
+
+const defaultPromoPack = {
+    promoAsia: true,
+    promoCA: true,
+    promoEurope: true,
+    promoNZ: true,
+    promoUK: true,
+    promoUS: true,
+}
 
 export const initialState: AppState = {
     // @ts-ignore
@@ -118,23 +133,10 @@ export const initialState: AppState = {
     scrollDisabled: false,
     translatedContent: {},
     parameters: Parameters,
-    expansion: {
-        core: cookies.getCookie('expansion.core') !== '0',
-        european: cookies.getCookie('expansion.european') !== '0',
-        oceania: cookies.getCookie('expansion.oceania') !== '0',
-        asia: cookies.getCookie('expansion.asia') !== '0',
-        americas: cookies.getCookie('expansion.americas') !== '0',
-    },
-    promoPack: {
-        promoAsia: cookies.getCookie('expansion.promoAsia') !== '0',
-        promoCA: cookies.getCookie('expansion.promoCA') !== '0',
-        promoEurope: cookies.getCookie('expansion.promoEurope') !== '0',
-        promoNZ: cookies.getCookie('expansion.promoNZ') !== '0',
-        promoUK: cookies.getCookie('expansion.promoUK') !== '0',
-        promoUS: cookies.getCookie('expansion.promoUS') !== '0',
-    },
-    sort: CardSort.Default,
-    assetPack: cookies.getCookie('assetPack') || 'silhouette'
+    expansion: PreferencesStorageService.getInitialExpansion(defaultExpansion),
+    promoPack: PreferencesStorageService.getInitialPromoPack(defaultPromoPack),
+    sort: PreferencesStorageService.getInitialSort(CardSort.Default),
+    assetPack: PreferencesStorageService.getInitialAssetPack('silhouette')
 }
 
 const reducer = createReducer(
@@ -271,7 +273,7 @@ const reducer = createReducer(
         const displayedCardsHidden = displayedCards.slice(SLICE_WINDOW)
         displayedCards = displayedCards.slice(0, SLICE_WINDOW)
 
-        return { ...state, displayedCards, displayedCardsHidden, displayedStats, scrollDisabled: !displayedCardsHidden.length, expansion: action.expansion, sort: action.sort }
+        return { ...state, displayedCards, displayedCardsHidden, displayedStats, scrollDisabled: !displayedCardsHidden.length, expansion: action.expansion, promoPack: action.promoPack, sort: action.sort }
     }),
 
     on(appActions.bonusCardSearch, (state, action) => {

@@ -6,12 +6,12 @@ import { Observable } from 'rxjs'
 import { Options } from 'ng5-slider'
 import { FormControl } from '@angular/forms'
 import { MatAutocompleteSelectedEvent, MatAutocompleteTrigger } from '@angular/material/autocomplete'
-import { CookiesService } from '../cookies.service'
 import { MatDialog } from '@angular/material/dialog'
 import { LanguageDialogComponent } from './language-dialog/language-dialog.component'
 import { AssetPackDialogComponent } from './asset-pack-dialog/asset-pack-dialog.component'
 import { AnalyticsService } from '../analytics.service'
 import { preferredLanguage, supportedLanguages } from '../languages'
+import { PreferencesStorageService, SearchQueryPreference } from '../preferences-storage.service'
 
 @Component({
   selector: 'app-search',
@@ -42,7 +42,7 @@ export class SearchComponent implements OnInit {
     { value: CardSort.BirdValueAscending, display: 'Value: low to high' },
   ]
 
-  query = {
+  query: SearchQueryPreference = {
     main: '',
     bonus: [],
     sort: CardSort.Default,
@@ -215,32 +215,19 @@ export class SearchComponent implements OnInit {
 
   constructor(
     private store: Store<{ app: AppState }>,
-    private cookies: CookiesService,
+    private preferences: PreferencesStorageService,
     public dialog: MatDialog,
     private analytics: AnalyticsService
   ) {
     this.filteredBonusCards = this.store.select(({ app }) => app.activeBonusCards)
     this.bonusCards = this.store.select(({ app }) => app.bonusCards)
-    this.language = preferredLanguage(cookies.hasConsent() ? cookies.getCookie('language') : '')
-    this.assetPack = cookies.getCookie('assetPack') || this.assetPack
-    this.query = {
-      ...this.query,
-      expansion: {
-        core: cookies.getCookie('expansion.core') !== '0',
-        european: cookies.getCookie('expansion.european') !== '0',
-        oceania: cookies.getCookie('expansion.oceania') !== '0',
-        asia: cookies.getCookie('expansion.asia') !== '0',
-        americas: cookies.getCookie('expansion.americas') !== '0',
-      },
-      promoPack: {
-        promoAsia: cookies.getCookie('expansion.promoAsia') !== '0',
-        promoCA: cookies.getCookie('expansion.promoCA') !== '0',
-        promoEurope: cookies.getCookie('expansion.promoEurope') !== '0',
-        promoNZ: cookies.getCookie('expansion.promoNZ') !== '0',
-        promoUK: cookies.getCookie('expansion.promoUK') !== '0',
-        promoUS: cookies.getCookie('expansion.promoUS') !== '0',
-      }
-    }
+    this.language = preferredLanguage(this.preferences.getLanguage())
+    this.assetPack = this.preferences.getAssetPack(this.assetPack)
+    this.query = this.preferences.getSearchQuery(this.query)
+    this.eggs = { ...this.query.eggs }
+    this.points = { ...this.query.points }
+    this.wingspan = { ...this.query.wingspan }
+    this.foodCost = { ...this.query.foodCost }
 
     this.selectedExpansions = Object.entries(this.query.expansion).reduce((acc, entry) => entry[1] ? [...acc, entry[0]] : acc, [])
     store.dispatch(search(this.query))
@@ -252,6 +239,7 @@ export class SearchComponent implements OnInit {
   }
 
   onQueryChange() {
+    this.preferences.saveSearchQuery(this.query)
     this.store.dispatch(search(this.query))
   }
 
@@ -354,10 +342,6 @@ export class SearchComponent implements OnInit {
       }
     }
 
-    Object.entries(this.query.promoPack).forEach(entry =>
-      this.cookies.setCookie(`expansion.${entry[0]}`, entry[1] ? '1' : '0', 365)
-    )
-
     this.onQueryChange()
   }
 
@@ -382,11 +366,11 @@ export class SearchComponent implements OnInit {
   }
 
   languageChange(language: string) {
+    this.preferences.saveLanguage(language)
+
     if (language === 'en') {
-      this.cookies.deleteCookie('language')
       this.store.dispatch(resetLanguage({ expansion: this.query.expansion }))
     } else {
-      this.cookies.setCookie('language', language, 180)
       this.store.dispatch(changeLanguage({ language: language, expansion: this.query.expansion, promoPack: this.query.promoPack }))
     }
 
@@ -398,11 +382,11 @@ export class SearchComponent implements OnInit {
   }
 
   assetPackChange(assetPack: string) {
+    this.preferences.saveAssetPack(assetPack)
+
     if (assetPack === 'silhouette') {
-      this.cookies.deleteCookie('assetPack')
       this.store.dispatch(changeAssetPack({ assetPack }))
     } else {
-      this.cookies.setCookie('assetPack', assetPack, 180)
       this.store.dispatch(changeAssetPack({ assetPack }))
       this.dialog.open(AssetPackDialogComponent, { closeOnNavigation: true, maxWidth: 'min(700px, 80vw)', data: {assetPack} })
     }
@@ -421,10 +405,6 @@ export class SearchComponent implements OnInit {
         ...selectedExpansions.reduce((acc, val) => ({ ...acc, [val]: true }), {})
       }
     }
-
-    Object.entries(this.query.expansion).forEach(entry =>
-      this.cookies.setCookie(`expansion.${entry[0]}`, entry[1] ? '1' : '0', 365)
-    )
 
     this.onBonusChange()
     this.onQueryChange()
