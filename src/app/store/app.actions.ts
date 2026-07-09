@@ -1,9 +1,10 @@
 import { createAction, props } from '@ngrx/store'
-import { Expansion, PromoPack } from './app.interfaces'
+import { CardSort, Expansion, PromoPack } from './app.interfaces'
 
 export const search = createAction('[App] Search', props<{
     main: string,
     bonus: number[],
+    sort: CardSort,
     stats: {
         habitat: {
             forest: number,

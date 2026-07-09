@@ -344,6 +344,16 @@
                     </span>
                 </div>
             </div>
+            <div class="sort-wrapper">
+                <mat-form-field appAnalyticsEvent="Sort cards">
+                    <mat-label>Sort</mat-label>
+                    <mat-select [ngModel]="query.sort" (ngModelChange)="sortChange($event)">
+                        <mat-option *ngFor="let sort of sortOptions" [value]="sort.value">
+                            {{sort.display}}
+                        </mat-option>
+                    </mat-select>
+                </mat-form-field>
+            </div>
             <div class="language-wrapper">
                 <div appAnalyticsEvent="Show language support" matTooltip="More about language support"
                     (click)="openLanguageDialog()">

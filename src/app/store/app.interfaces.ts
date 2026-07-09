@@ -11,6 +11,7 @@ export interface AppState {
     expansion: Expansion
     swiftstart: boolean
     promoPack: PromoPack
+    sort: CardSort
     displayedStats: DisplayedStats
     scrollDisabled: boolean
     translatedContent: { [key: string]: { Translated: string } }
@@ -108,6 +109,12 @@ export function calculateBirdCardValue(card: BirdCard): number {
     const foodCost = Number(card['Total food cost']) || 0
 
     return victoryPoints - foodCost - 2
+}
+
+export enum CardSort {
+    Default = 'default',
+    BirdValueDescending = 'birdValueDescending',
+    BirdValueAscending = 'birdValueAscending',
 }
 
 export enum Color {

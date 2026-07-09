@@ -350,6 +350,14 @@ button {
     max-width: 85px;
 }
 
+.sort-wrapper {
+    max-width: 150px;
+
+    mat-form-field {
+        max-width: 100%;
+    }
+}
+
 .flex-row {
     display: flex;
     flex-direction: row;

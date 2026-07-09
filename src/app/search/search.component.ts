@@ -1,7 +1,7 @@
 import { Component, OnInit, ViewChild } from '@angular/core'
 import { Store } from '@ngrx/store'
 import { search, bonusCardSearch, changeLanguage, resetLanguage, changeAssetPack } from '../store/app.actions'
-import { AppState, BonusCard } from '../store/app.interfaces'
+import { AppState, BonusCard, CardSort } from '../store/app.interfaces'
 import { Observable } from 'rxjs'
 import { Options } from 'ng5-slider'
 import { FormControl } from '@angular/forms'
@@ -36,9 +36,16 @@ export class SearchComponent implements OnInit {
     { value: 'diffusion', display: "Stable Diffusion"}
   ]
 
+  readonly sortOptions = [
+    { value: CardSort.Default, display: 'Default' },
+    { value: CardSort.BirdValueDescending, display: 'Value: high to low' },
+    { value: CardSort.BirdValueAscending, display: 'Value: low to high' },
+  ]
+
   query = {
     main: '',
     bonus: [],
+    sort: CardSort.Default,
     stats: {
       habitat: {
         forest: 0,
@@ -252,6 +259,11 @@ export class SearchComponent implements OnInit {
     this.store.dispatch(bonusCardSearch({ bonus: this.query.bonus, bonusfield: this.bonusControl.value, expansion: this.query.expansion }))
   }
 
+  sortChange(sort: CardSort) {
+    this.query = { ...this.query, sort }
+    this.onQueryChange()
+  }
+
   onKeyDown(event: KeyboardEvent) {
     if (event.key === ' ') {
       event.stopPropagation()
@@ -276,6 +288,7 @@ export class SearchComponent implements OnInit {
       ...this.query,
       main: '',
       bonus: [],
+      sort: CardSort.Default,
       stats: {
         habitat: { forest: 0, grassland: 0, wetland: 0 },
         birds: true,

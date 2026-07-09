@@ -11,7 +11,9 @@ import {
     isBonusCard,
     BeakDirection,
     LeftBeakDirections,
-    RightBeakDirections
+    RightBeakDirections,
+    calculateBirdCardValue,
+    CardSort
 } from './app.interfaces'
 import BirdCards from '../../assets/data/master.json'
 import BonusCards from '../../assets/data/bonus.json'
@@ -62,6 +64,36 @@ const eatsMustNotFood = (card: BirdCard, mustNotFood: string[]): boolean => {
         (!mustNotFood.includes('no-food') || birdFood.length > 0)
 }
 
+const birdCardValue = (card: BirdCard | BonusCard): number => {
+    return isBirdOrHummingbirdCard(card) ? calculateBirdCardValue(card) : 0
+}
+
+const sortDisplayedCards = (cards: (BirdCard | BonusCard)[], sort: CardSort): (BirdCard | BonusCard)[] => {
+    if (sort === CardSort.Default) {
+        return cards
+    }
+
+    const direction = sort === CardSort.BirdValueAscending ? 1 : -1
+
+    return cards
+        .map((card, index) => ({ card, index }))
+        .sort((a, b) => {
+            const aIsBird = isBirdOrHummingbirdCard(a.card)
+            const bIsBird = isBirdOrHummingbirdCard(b.card)
+
+            if (aIsBird && bIsBird) {
+                return direction * (birdCardValue(a.card) - birdCardValue(b.card)) || a.index - b.index
+            }
+
+            if (aIsBird !== bIsBird) {
+                return aIsBird ? -1 : 1
+            }
+
+            return a.index - b.index
+        })
+        .map(({ card }) => card)
+}
+
 const cookies: CookiesService = new CookiesService();
 
 export const initialState: AppState = {
@@ -101,6 +133,7 @@ export const initialState: AppState = {
         promoUK: cookies.getCookie('expansion.promoUK') !== '0',
         promoUS: cookies.getCookie('expansion.promoUS') !== '0',
     },
+    sort: CardSort.Default,
     assetPack: cookies.getCookie('assetPack') || 'silhouette'
 }
 
@@ -233,10 +266,12 @@ const reducer = createReducer(
 
         const displayedStats = calculateDisplayedStats(displayedCards)
 
+        displayedCards = sortDisplayedCards(displayedCards, action.sort)
+
         const displayedCardsHidden = displayedCards.slice(SLICE_WINDOW)
         displayedCards = displayedCards.slice(0, SLICE_WINDOW)
 
-        return { ...state, displayedCards, displayedCardsHidden, displayedStats, scrollDisabled: false, expansion: action.expansion }
+        return { ...state, displayedCards, displayedCardsHidden, displayedStats, scrollDisabled: false, expansion: action.expansion, sort: action.sort }
     }),
 
     on(appActions.bonusCardSearch, (state, action) => {
@@ -324,21 +359,20 @@ const reducer = createReducer(
         const displayedBonuses = displayedAndHiddenCards.filter(isBonusCard)
             .map(translateBonuses).sort(sortCardsByKey('Bonus card', true))
             .map(dynamicPercentage(birdCards, action.expansion))
+        const displayedCards = sortDisplayedCards([...displayedBirds, ...displayedBonuses], state.sort)
+        const displayedCardsHidden = displayedCards.slice(SLICE_WINDOW)
 
         return {
             ...state,
             birdCards,
             bonusCards,
             search: { birdCards: birdCardsSearch(birdCards), bonusCards: bonusCardsSearch(bonusCards) },
-            // @ts-ignore
-            displayedCards: displayedBirds.concat(displayedBonuses).slice(0, SLICE_WINDOW),
-            // @ts-ignore
-            displayedCardsHidden: displayedBirds.concat(displayedBonuses).slice(SLICE_WINDOW),
+            displayedCards: displayedCards.slice(0, SLICE_WINDOW),
+            displayedCardsHidden,
             activeBonusCards: bonusCards.filter(b => state.activeBonusCards.find(ab => b.id === ab.id)),
             translatedContent: action.payload.other,
             parameters: action.payload.parameters,
-            // @ts-ignore
-            scrollDisabled: !displayedBirds.concat(displayedBonuses).slice(SLICE_WINDOW).length
+            scrollDisabled: !displayedCardsHidden.length
         }
     }),
 
@@ -365,8 +399,9 @@ const reducer = createReducer(
             .map(birdToEnglish).sort(sortCardsByKey('Common name'))
         const displayedBonuses = displayedAndHiddenCards.filter(isBonusCard)
             .map(bonusToEnglish).sort(sortCardsByKey('Bonus card', true))
-            // @ts-ignore
-            .map(dynamicPercentage(BirdCardsWithHummingbirds, action.expansion))
+            .map(dynamicPercentage(BirdCardsWithHummingbirds as unknown as BirdCard[], action.expansion))
+        const displayedCards = sortDisplayedCards([...displayedBirds, ...displayedBonuses], state.sort)
+        const displayedCardsHidden = displayedCards.slice(SLICE_WINDOW)
 
         return {
             ...state,
@@ -376,16 +411,13 @@ const reducer = createReducer(
             bonusCards: BonusCards,
             // @ts-ignore
             search: { birdCards: birdCardsSearch(BirdCardsWithHummingbirds), bonusCards: bonusCardsSearch(BonusCards) },
-            // @ts-ignore
-            displayedCards: displayedBirds.concat(displayedBonuses).slice(0, SLICE_WINDOW),
-            // @ts-ignore
-            displayedCardsHidden: displayedBirds.concat(displayedBonuses).slice(SLICE_WINDOW),
+            displayedCards: displayedCards.slice(0, SLICE_WINDOW),
+            displayedCardsHidden,
             // @ts-ignore
             activeBonusCards: BonusCards.filter(eb => state.activeBonusCards.find(b => b.id === eb.id)),
             translatedContent: {},
             parameters: Parameters,
-            // @ts-ignore
-            scrollDisabled: !displayedBirds.concat(displayedBonuses).slice(SLICE_WINDOW).length
+            scrollDisabled: !displayedCardsHidden.length
         }
     }),
 
