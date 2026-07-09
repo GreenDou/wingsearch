@@ -1,5 +1,6 @@
 <mat-grid-list [cols]="columns" rowHeight="28:43" gutterSize="16px" (window:resize)="onResize($event)" infiniteScroll
-    [infiniteScrollDistance]="3" [infiniteScrollThrottle]="50" [infiniteScrollDisabled]="scrollDisabled$ | async"
+    [infiniteScrollDistance]="3" [infiniteScrollThrottle]="50" [immediateCheck]="true"
+    [infiniteScrollDisabled]="scrollDisabled$ | async"
     (scrolled)="onScroll()">
     <mat-grid-tile *ngFor="let card of cards$ | async">
         <mat-card #cardElement appAnalyticsEvent="Bird detail" [eventLabel]="card['Common name']"

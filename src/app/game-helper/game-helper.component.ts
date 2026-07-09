@@ -67,6 +67,14 @@ export class GameHelperComponent implements OnDestroy {
   filteredPlanBirdCards: BirdCard[] = []
   filteredPlayedBirdCards: BirdCard[] = []
 
+  displayBird = (card: BirdCard | string): string => {
+    if (!card) {
+      return ''
+    }
+
+    return typeof card === 'string' ? card : this.birdName(card)
+  }
+
   private nextEntryId = 1
   private subscription = new Subscription()
 
@@ -85,14 +93,6 @@ export class GameHelperComponent implements OnDestroy {
 
   ngOnDestroy(): void {
     this.subscription.unsubscribe()
-  }
-
-  displayBird(card: BirdCard | string): string {
-    if (!card) {
-      return ''
-    }
-
-    return typeof card === 'string' ? card : this.birdName(card)
   }
 
   addPlannedBird(): void {
@@ -128,11 +128,11 @@ export class GameHelperComponent implements OnDestroy {
   }
 
   selectPlanBird(event: MatAutocompleteSelectedEvent): void {
-    this.planCardControl.setValue(event.option.value)
+    this.planCardControl.setValue(event.option.value as BirdCard)
   }
 
   selectPlayedBird(event: MatAutocompleteSelectedEvent): void {
-    this.playedCardControl.setValue(event.option.value)
+    this.playedCardControl.setValue(event.option.value as BirdCard)
   }
 
   setManualTurns(type: TurnType, value: string | number): void {

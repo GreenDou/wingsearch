@@ -1,22 +1,22 @@
-import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core'
+import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core'
 import { Store } from '@ngrx/store'
 import { BirdCard, BonusCard, isBirdCard, isHummingbirdCard, isBonusCard } from '../store/app.interfaces'
-import { selectCard, State, selectCardId } from '../store/router'
-import { Observable, BehaviorSubject } from 'rxjs'
+import { selectCard, State } from '../store/router'
+import { Observable, BehaviorSubject, Subscription } from 'rxjs'
 import { MatDialog } from '@angular/material/dialog'
 import { scroll } from '../store/app.actions'
 import { BirdCardDetailComponent } from '../bird-card/bird-card-detail/bird-card-detail.component'
 import { BonusCardDetailComponent } from '../bonus-card/bonus-card-detail/bonus-card-detail.component'
 import { HummingbirdCardDetailComponent } from '../hummingbird-card/hummingbird-card-detail/hummingbird-card-detail.component'
 import { AnalyticsService } from '../analytics.service'
-import { ActivatedRoute, Router } from '@angular/router'
+import { Router } from '@angular/router'
 
 @Component({
   selector: 'app-display',
   templateUrl: './display.component.html',
   styleUrls: ['./display.component.scss']
 })
-export class DisplayComponent implements OnInit, AfterViewInit {
+export class DisplayComponent implements OnInit, AfterViewInit, OnDestroy {
 
   cards$: Observable<(BirdCard | BonusCard)[]>
   selectedCard$: Observable<BirdCard | BonusCard>
@@ -25,6 +25,8 @@ export class DisplayComponent implements OnInit, AfterViewInit {
   private readonly CARD_MINIMUM_WIDTH = 165
 
   private readonly MAX_DISPLAY_COLUMNS = 6
+  private readonly FALLBACK_SCROLL_DISTANCE = 3
+  private readonly SCROLL_LOAD_THROTTLE_MS = 100
 
   private readonly BIRD_DIALOG_ID = '0'
   private readonly BONUS_DIALOG_ID = '1'
@@ -35,8 +37,11 @@ export class DisplayComponent implements OnInit, AfterViewInit {
 
   cardHeight$ = new BehaviorSubject<number>(0)
   selectedCardType: 'bird' | 'hummingbird' | 'bonus' | null = null
+  private scrollDisabled = false
+  private lastScrollLoad = 0
+  private subscription = new Subscription()
 
-  constructor(private store: Store<State>, public dialog: MatDialog, private analytics: AnalyticsService, private router: Router, private route: ActivatedRoute) {
+  constructor(private store: Store<State>, public dialog: MatDialog, private analytics: AnalyticsService, private router: Router) {
     this.cards$ = this.store.select(({ app }) => app.displayedCards)
     this.scrollDisabled$ = this.store.select(({ app }) => app.scrollDisabled)
     this.selectedCard$ = this.store.select(selectCard)
@@ -46,7 +51,11 @@ export class DisplayComponent implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     this.columns = this.calculateColumns(window.innerWidth)
-    this.selectedCard$.subscribe(card => {
+    this.subscription.add(this.scrollDisabled$.subscribe(disabled => {
+      this.scrollDisabled = disabled
+    }))
+
+    this.subscription.add(this.selectedCard$.subscribe(card => {
       if (!card) {
         this.dialog.closeAll()
         this.selectedCardType = null
@@ -77,11 +86,15 @@ export class DisplayComponent implements OnInit, AfterViewInit {
           this.openBonusDialog(card as BonusCard)
         }
       }
-    })
+    }))
   }
 
   ngAfterViewInit(): void {
     setTimeout(() => this.cardHeight$.next(this.cardElement.nativeElement.offsetHeight), 0)
+  }
+
+  ngOnDestroy(): void {
+    this.subscription.unsubscribe()
   }
 
   private calculateColumns(width): number {
@@ -103,6 +116,13 @@ export class DisplayComponent implements OnInit, AfterViewInit {
   onResize(event) {
     this.columns = this.calculateColumns(event.target.innerWidth)
     setTimeout(() => this.cardHeight$.next(this.cardElement.nativeElement.offsetHeight))
+  }
+
+  @HostListener('window:scroll')
+  onWindowScroll(): void {
+    if (this.isNearPageBottom()) {
+      this.loadMoreCards()
+    }
   }
 
   openBirdDialog(card: BirdCard) {
@@ -157,7 +177,39 @@ export class DisplayComponent implements OnInit, AfterViewInit {
   }
 
   onScroll() {
+    this.loadMoreCards()
+  }
+
+  private loadMoreCards() {
+    if (this.scrollDisabled) {
+      return
+    }
+
+    const now = Date.now()
+    if (now - this.lastScrollLoad < this.SCROLL_LOAD_THROTTLE_MS) {
+      return
+    }
+
+    this.lastScrollLoad = now
     this.store.dispatch(scroll())
     this.analytics.sendEvent('Scroll cards', { event_category: 'engagement' })
+  }
+
+  private isNearPageBottom(): boolean {
+    const scrollTop = window.pageYOffset
+      || document.documentElement.scrollTop
+      || document.body.scrollTop
+      || 0
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight
+    const documentHeight = Math.max(
+      document.body.scrollHeight,
+      document.documentElement.scrollHeight,
+      document.body.offsetHeight,
+      document.documentElement.offsetHeight,
+      document.body.clientHeight,
+      document.documentElement.clientHeight
+    )
+
+    return documentHeight - (scrollTop + viewportHeight) <= viewportHeight * this.FALLBACK_SCROLL_DISTANCE
   }
 }

@@ -271,7 +271,7 @@ const reducer = createReducer(
         const displayedCardsHidden = displayedCards.slice(SLICE_WINDOW)
         displayedCards = displayedCards.slice(0, SLICE_WINDOW)
 
-        return { ...state, displayedCards, displayedCardsHidden, displayedStats, scrollDisabled: false, expansion: action.expansion, sort: action.sort }
+        return { ...state, displayedCards, displayedCardsHidden, displayedStats, scrollDisabled: !displayedCardsHidden.length, expansion: action.expansion, sort: action.sort }
     }),
 
     on(appActions.bonusCardSearch, (state, action) => {
